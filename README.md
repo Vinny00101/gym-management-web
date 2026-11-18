@@ -99,7 +99,37 @@ Mudanças incompatíveis levam `!` antes dos dois-pontos (`feat(api)!: troca o f
 
 ## Como rodar
 
-Pré-requisitos: Node.js 22.22.3+ (ou 24) e npm 11. O npm 10.9 falha na instalação com o erro `Cannot read properties of null (reading 'edgesOut')`; atualize com `npm install -g npm@11`.
+### 1. Variáveis de ambiente
+
+Na raiz do repositório, crie o arquivo `.env` a partir do exemplo (usado pelo backend e pelo Docker Compose de desenvolvimento):
+
+```bash
+cp .env.example .env
+```
+
+Ajuste os valores conforme necessário. Em desenvolvimento, as credenciais do banco no `.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT`, `DATABASE_URL`) devem permanecer consistentes entre si.
+
+### 2. Infraestrutura local (PostgreSQL e Redis)
+
+Suba os serviços de desenvolvimento definidos em `docker/docker-compose.dev.yml`:
+
+```bash
+docker compose --env-file .env -f docker/docker-compose.dev.yml up -d
+```
+
+Para acompanhar o status/health checks:
+
+```bash
+docker compose --env-file .env -f docker/docker-compose.dev.yml ps
+```
+
+Para parar e remover os containers (os volumes persistentes são mantidos):
+
+```bash
+docker compose --env-file .env -f docker/docker-compose.dev.yml down
+```
+
+### 3. Backend (API)
 
 ```bash
 cd backend
