@@ -2,7 +2,7 @@
 
 Todas as mudanças relevantes do projeto são registradas aqui.
 
-O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/). Os códigos (RF, RNF, RD) apontam para os [requisitos](docs/requirements.md).
+O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto usa [Versionamento Semântico](https://semver.org/lang/pt-BR/). Os códigos (RF, RNF, RD) apontam para os [requisitos](docs/requirements.md). As entradas derivam dos commits, que seguem [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/) — veja a [convenção de commits](README.md#convenção-de-commits) no README.
 
 ## [Não lançado]
 
@@ -14,8 +14,9 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 
 **Estrutura e infraestrutura**
 
-- [ ] Estrutura do repositório único (`api/`, `web/`, `docs/`)
-- [ ] Projeto NestJS em `api/` com TypeScript, ESLint e Prettier, `.env.example` e scripts de execução
+- [x] Estrutura do repositório único (`backend/`, `frontend/`, `docs/`)
+- [x] Projeto NestJS 12 em `backend/` com TypeScript, oxlint, Prettier e Vitest
+- [ ] `.env.example` com as variáveis da API
 - [ ] Validação das variáveis de ambiente na inicialização com `@nestjs/config`
 - [ ] Docker Compose de desenvolvimento com PostgreSQL e Redis
 - [ ] Prisma configurado com PostgreSQL ([RNF09](docs/requirements.md#requisitos-não-funcionais))

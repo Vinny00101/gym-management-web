@@ -18,7 +18,7 @@ Além das regras de negócio, o projeto foca em requisitos de qualidade: pipelin
 
 | Camada | Tecnologia |
 | --- | --- |
-| Backend | Node.js 22 LTS, TypeScript, NestJS |
+| Backend | Node.js 22 LTS (22.22.3 ou mais novo) ou 24, npm 11, TypeScript 6, NestJS 12 (ESM) |
 | Banco de dados | PostgreSQL com Prisma (ORM e migrações) |
 | Cache | Redis via `@nestjs/cache-manager` |
 | Autenticação | JWT (`@nestjs/jwt` + `passport-jwt`) e hash de senha com `argon2` |
@@ -26,10 +26,12 @@ Além das regras de negócio, o projeto foca em requisitos de qualidade: pipelin
 | Segurança | `helmet`, `@nestjs/throttler` (limite de tentativas no login) |
 | Logs | `nestjs-pino`, com request id em todas as requisições |
 | Documentação da API | Swagger com `@nestjs/swagger` |
-| Testes | Jest + supertest |
+| Testes | Vitest + supertest |
 | Frontend | Vue 3, Vite, TypeScript, Pinia, Vue Router e Axios |
 | Infraestrutura | Docker Compose (API em 2 instâncias, PostgreSQL, Redis e NGINX) e GitHub Actions |
-| Qualidade de código | ESLint, Prettier e Conventional Commits |
+| Qualidade de código | oxlint, Prettier e Conventional Commits |
+
+O backend usa **ESM**: imports relativos terminam em `.js` (`import { AppService } from './app.service.js'`), `__dirname` não existe (use `import.meta.dirname`) e os mocks dos testes usam `vi.fn()`, não `jest.fn()`.
 
 ### Pipeline de requisição (RNF01)
 
@@ -59,14 +61,59 @@ As etapas do [RNF01](docs/requirements.md#requisitos-não-funcionais) correspond
 
   ```
   gym-management-web/
-  ├── api/        # NestJS + Prisma
-  ├── web/        # Vue 3 + Vite
+  ├── backend/    # NestJS + Prisma
+  ├── frotend/        # Vue 3 + Vite
   ├── docs/       # requisitos
   ├── nginx/      # configuração do proxy reverso
   ├── docker-compose.yml
   ├── README.md
   └── CHANGELOG.md
   ```
+
+## Convenção de commits
+
+Os commits seguem [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/), no formato `<tipo>(<escopo>): <descrição>`. O escopo é opcional, a descrição vai no imperativo, em português e sem ponto final.
+
+| Tipo | Uso |
+| --- | --- |
+| `feat` | nova funcionalidade |
+| `fix` | correção de bug |
+| `docs` | documentação |
+| `test` | criação ou ajuste de testes |
+| `refactor` | mudança de código sem alterar o comportamento |
+| `perf` | melhoria de performance |
+| `build` | build, dependências ou configuração do projeto |
+| `ci` | pipeline de integração contínua |
+| `style` | formatação, sem mudança de lógica |
+| `chore` | tarefas de manutenção |
+
+Exemplos:
+
+```text
+feat(auth): adiciona login com e-mail e senha
+fix(membros): corrige filtro por situação
+docs: documenta a convenção de commits
+```
+
+Mudanças incompatíveis levam `!` antes dos dois-pontos (`feat(api)!: troca o formato do erro`) ou o rodapé `BREAKING CHANGE: ...`. Os commits `feat` e `fix` são a base das entradas do [CHANGELOG](CHANGELOG.md): `fix` corresponde a um *patch* e `feat` a uma *minor* do Versionamento Semântico, enquanto uma mudança incompatível indica *major*.
+
+## Como rodar
+
+Pré-requisitos: Node.js 22.22.3+ (ou 24) e npm 11. O npm 10.9 falha na instalação com o erro `Cannot read properties of null (reading 'edgesOut')`; atualize com `npm install -g npm@11`.
+
+```bash
+cd backend
+npm install
+npm run start:dev      # API em http://localhost:3000
+```
+
+| Comando | O que faz |
+| --- | --- |
+| `npm run build` | Compila para `dist/` |
+| `npm run lint` | oxlint com checagem de tipos |
+| `npm test` | Testes unitários (Vitest) |
+| `npm run test:e2e` | Testes end-to-end (Vitest + supertest) |
+| `npm run start:prod` | Roda a versão compilada |
 
 ## Documentação
 
@@ -80,7 +127,7 @@ Os requisitos completos estão em [docs/requirements.md](docs/requirements.md):
 
 ## Escopo por etapa
 
-O que será entregue em cada etapa fica registrado no [CHANGELOG](CHANGELOG.md).
+O que será entregue em cada etapa fica registrado no [CHANGELOG](CHANGELOG.md). As tasks da Parte 1, com responsáveis e critérios de aceite, estão em [docs/tasks-parte-1.md](docs/tasks-parte-1.md).
 
 | Etapa | Foco | Requisitos |
 | --- | --- | --- |
