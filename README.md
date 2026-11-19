@@ -109,6 +109,8 @@ cp .env.example .env
 
 Ajuste os valores conforme necessário. Em desenvolvimento, as credenciais do banco no `.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT`, `DATABASE_URL`) devem permanecer consistentes entre si.
 
+Defina também `ADMIN_NAME`, `ADMIN_EMAIL` e `ADMIN_PASSWORD` para criar o primeiro administrador. Use uma senha forte e não compartilhe nem registre essas credenciais.
+
 ### 2. Infraestrutura local (PostgreSQL e Redis)
 
 Suba os serviços de desenvolvimento definidos em `docker/docker-compose.dev.yml`:
@@ -138,6 +140,13 @@ npm run start:dev      # API em http://localhost:3000
 ```
 
 A documentação interativa da API fica em `http://localhost:3000/api/docs`. O endpoint público `GET /health` verifica a conexão com o banco e responde com status 503 quando ele está indisponível.
+Com o PostgreSQL iniciado e as migrações aplicadas, crie o primeiro administrador:
+
+```bash
+npm run prisma:seed
+```
+
+O seed usa as variáveis `ADMIN_NAME`, `ADMIN_EMAIL` e `ADMIN_PASSWORD` do `.env`. Ele pode ser executado novamente sem duplicar o administrador.
 
 | Comando | O que faz |
 | --- | --- |

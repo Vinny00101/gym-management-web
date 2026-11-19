@@ -24,6 +24,9 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 - [ ] Seed do primeiro administrador com credenciais vindas de variáveis de ambiente (RF02)
 - [x] `helmet` e `GET /health` com `@nestjs/terminus`
 - [x] Swagger em `/api/docs` com `@nestjs/swagger`, documentando os endpoints desta etapa (RNF16)
+- [x] Seed do primeiro administrador com credenciais vindas de variáveis de ambiente (RF02)
+- [ ] `helmet` e `GET /health` com `@nestjs/terminus`
+- [ ] Swagger em `/api/docs` com `@nestjs/swagger`, documentando os endpoints desta etapa (RNF16)
 
 **Pipeline de middlewares** ([RNF01](docs/requirements.md#requisitos-não-funcionais))
 
@@ -31,7 +34,7 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 - [x] Sanitização e validação de entrada por esquema (RNF08)
 - [ ] Autenticação por JWT com expiração curta, algoritmo fixo e segredo vindo de variável de ambiente (RNF06)
 - [ ] Autorização por papel e por posse do recurso (RNF07)
-- [ ] Tratamento de erros centralizado com formato JSON único (código, mensagem, request id) e sem detalhes internos para o cliente (RNF02, RNF03)
+- [x] Tratamento de erros centralizado com formato JSON único (código, mensagem, request id) e sem detalhes internos para o cliente (RNF02, RNF03)
 - [ ] API stateless, sem sessão em memória (RNF14)
 
 **Autenticação**
