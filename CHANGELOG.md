@@ -31,7 +31,7 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 - [ ] Sanitização e validação de entrada por esquema (RNF08)
 - [ ] Autenticação por JWT com expiração curta, algoritmo fixo e segredo vindo de variável de ambiente (RNF06)
 - [ ] Autorização por papel e por posse do recurso (RNF07)
-- [ ] Tratamento de erros centralizado com formato JSON único (código, mensagem, request id) e sem detalhes internos para o cliente (RNF02, RNF03)
+- [x] Tratamento de erros centralizado com formato JSON único (código, mensagem, request id) e sem detalhes internos para o cliente (RNF02, RNF03)
 - [ ] API stateless, sem sessão em memória (RNF14)
 
 **Autenticação**
