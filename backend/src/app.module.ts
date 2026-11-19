@@ -45,6 +45,10 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
           'string.empty': 'ADMIN_EMAIL is required',
           'string.email': 'ADMIN_EMAIL must be a valid email',
         }),
+        ADMIN_NAME: Joi.string().required().messages({
+          'any.required': 'ADMIN_NAME is required',
+          'string.empty': 'ADMIN_NAME is required',
+        }),
         ADMIN_PASSWORD: Joi.string().required().messages({
           'any.required': 'ADMIN_PASSWORD is required',
           'string.empty': 'ADMIN_PASSWORD is required',
