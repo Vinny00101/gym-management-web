@@ -21,6 +21,9 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 - [x] Docker Compose de desenvolvimento com PostgreSQL e Redis
 - [x] Prisma configurado com PostgreSQL ([RNF09](docs/requirements.md#requisitos-não-funcionais))
 - [x] Migrações iniciais: tabela de usuários (admin, trainer, member) com e-mail único, situação do membro e instrutor responsável ([RNF04](docs/requirements.md#requisitos-não-funcionais), RD01, RD05, RD10)
+- [ ] Seed do primeiro administrador com credenciais vindas de variáveis de ambiente (RF02)
+- [x] `helmet` e `GET /health` com `@nestjs/terminus`
+- [x] Swagger em `/api/docs` com `@nestjs/swagger`, documentando os endpoints desta etapa (RNF16)
 - [x] Seed do primeiro administrador com credenciais vindas de variáveis de ambiente (RF02)
 - [ ] `helmet` e `GET /health` com `@nestjs/terminus`
 - [ ] Swagger em `/api/docs` com `@nestjs/swagger`, documentando os endpoints desta etapa (RNF16)
@@ -28,7 +31,7 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 **Pipeline de middlewares** ([RNF01](docs/requirements.md#requisitos-não-funcionais))
 
 - [x] Logging de requisições com request id, método, rota, status e tempo de resposta (RNF10)
-- [ ] Sanitização e validação de entrada por esquema (RNF08)
+- [x] Sanitização e validação de entrada por esquema (RNF08)
 - [ ] Autenticação por JWT com expiração curta, algoritmo fixo e segredo vindo de variável de ambiente (RNF06)
 - [ ] Autorização por papel e por posse do recurso (RNF07)
 - [x] Tratamento de erros centralizado com formato JSON único (código, mensagem, request id) e sem detalhes internos para o cliente (RNF02, RNF03)

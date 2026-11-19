@@ -139,6 +139,7 @@ npm install
 npm run start:dev      # API em http://localhost:3000
 ```
 
+A documentação interativa da API fica em `http://localhost:3000/api/docs`. O endpoint público `GET /health` verifica a conexão com o banco e responde com status 503 quando ele está indisponível.
 Com o PostgreSQL iniciado e as migrações aplicadas, crie o primeiro administrador:
 
 ```bash
