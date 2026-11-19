@@ -1,10 +1,12 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { createObserveModule } from '@nestjs/observe';
+import { TerminusModule } from '@nestjs/terminus';
 import { LoggerModule } from 'nestjs-pino';
 import Joi from 'joi';
 import { resolve } from 'node:path';
 import { AppController } from './controllers/app.controller.js';
+import { HealthController } from './controllers/health.controller.js';
 import { AppService } from './services/app.service.js';
 import { InputSanitizationMiddleware } from './middleware/input-sanitization.middleware.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -87,13 +89,14 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       },
     }),
     PrismaModule,
+    TerminusModule,
     ObserveModule.forRoot({
       appKey: process.env.OBSERVE_APP_KEY ?? 'YOUR_APP_KEY',
       appSecret: process.env.OBSERVE_APP_SECRET ?? 'YOUR_APP_SECRET',
       serviceId: 'backend',
     }),
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [AppService],
 })
 export class AppModule implements NestModule {
