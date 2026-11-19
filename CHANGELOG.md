@@ -16,18 +16,18 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 
 - [x] Estrutura do repositório único (`backend/`, `frontend/`, `docs/`)
 - [x] Projeto NestJS 12 em `backend/` com TypeScript, oxlint, Prettier e Vitest
-- [ ] `.env.example` com as variáveis da API
-- [ ] Validação das variáveis de ambiente na inicialização com `@nestjs/config`
-- [ ] Docker Compose de desenvolvimento com PostgreSQL e Redis
-- [ ] Prisma configurado com PostgreSQL ([RNF09](docs/requirements.md#requisitos-não-funcionais))
-- [ ] Migrações iniciais: tabela de usuários (admin, trainer, member) com e-mail único, situação do membro e instrutor responsável ([RNF04](docs/requirements.md#requisitos-não-funcionais), RD01, RD05, RD10)
+- [x] `.env.example` com as variáveis da API
+- [x] Validação das variáveis de ambiente na inicialização com `@nestjs/config`
+- [x] Docker Compose de desenvolvimento com PostgreSQL e Redis
+- [x] Prisma configurado com PostgreSQL ([RNF09](docs/requirements.md#requisitos-não-funcionais))
+- [x] Migrações iniciais: tabela de usuários (admin, trainer, member) com e-mail único, situação do membro e instrutor responsável ([RNF04](docs/requirements.md#requisitos-não-funcionais), RD01, RD05, RD10)
 - [ ] Seed do primeiro administrador com credenciais vindas de variáveis de ambiente (RF02)
 - [ ] `helmet` e `GET /health` com `@nestjs/terminus`
 - [ ] Swagger em `/api/docs` com `@nestjs/swagger`, documentando os endpoints desta etapa (RNF16)
 
 **Pipeline de middlewares** ([RNF01](docs/requirements.md#requisitos-não-funcionais))
 
-- [ ] Logging de requisições com request id, método, rota, status e tempo de resposta (RNF10)
+- [x] Logging de requisições com request id, método, rota, status e tempo de resposta (RNF10)
 - [ ] Sanitização e validação de entrada por esquema (RNF08)
 - [ ] Autenticação por JWT com expiração curta, algoritmo fixo e segredo vindo de variável de ambiente (RNF06)
 - [ ] Autorização por papel e por posse do recurso (RNF07)

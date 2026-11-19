@@ -1,11 +1,16 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { createObserveModule } from '@nestjs/observe';
+import { LoggerModule } from 'nestjs-pino';
 import Joi from 'joi';
 import { resolve } from 'node:path';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
+import { AppController } from './controllers/app.controller.js';
+import { AppService } from './services/app.service.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import {
+  getRequestId,
+  RequestIdMiddleware,
+} from './middleware/request-id.middleware.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -50,6 +55,36 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
         abortEarly: false,
       } as any,
     }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        genReqId: (req) => getRequestId(req),
+        redact: {
+          paths: [
+            'req.headers.authorization',
+            'req.headers.cookie',
+            'req.body.password',
+            'req.body.token',
+            'req.body.accessToken',
+            'req.body.refreshToken',
+          ],
+          censor: '[REDACTED]',
+        },
+        serializers: {
+          req: (req) => ({
+            id: req.id,
+            method: req.method,
+            url: req.url,
+          }),
+          res: (res) => ({
+            statusCode: res.statusCode,
+          }),
+        },
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { colorize: true } }
+            : undefined,
+      },
+    }),
     PrismaModule,
     ObserveModule.forRoot({
       appKey: process.env.OBSERVE_APP_KEY ?? 'YOUR_APP_KEY',
@@ -60,4 +95,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

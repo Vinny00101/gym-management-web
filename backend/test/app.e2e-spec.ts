@@ -23,6 +23,20 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
+  it('returns a generated X-Request-Id header', async () => {
+    const response = await request(app.getHttpServer()).get('/');
+
+    expect(response.headers['x-request-id']).toBeDefined();
+  });
+
+  it('preserves an incoming X-Request-Id header', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/')
+      .set('X-Request-Id', 'test-request-id');
+
+    expect(response.headers['x-request-id']).toBe('test-request-id');
+  });
+
   afterEach(async () => {
     await app.close();
   });
