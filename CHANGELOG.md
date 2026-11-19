@@ -28,7 +28,7 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 **Pipeline de middlewares** ([RNF01](docs/requirements.md#requisitos-não-funcionais))
 
 - [x] Logging de requisições com request id, método, rota, status e tempo de resposta (RNF10)
-- [ ] Sanitização e validação de entrada por esquema (RNF08)
+- [x] Sanitização e validação de entrada por esquema (RNF08)
 - [ ] Autenticação por JWT com expiração curta, algoritmo fixo e segredo vindo de variável de ambiente (RNF06)
 - [ ] Autorização por papel e por posse do recurso (RNF07)
 - [ ] Tratamento de erros centralizado com formato JSON único (código, mensagem, request id) e sem detalhes internos para o cliente (RNF02, RNF03)

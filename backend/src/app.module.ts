@@ -6,6 +6,7 @@ import Joi from 'joi';
 import { resolve } from 'node:path';
 import { AppController } from './controllers/app.controller.js';
 import { AppService } from './services/app.service.js';
+import { InputSanitizationMiddleware } from './middleware/input-sanitization.middleware.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import {
   getRequestId,
@@ -97,6 +98,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(RequestIdMiddleware).forRoutes('*');
+    consumer
+      .apply(InputSanitizationMiddleware, RequestIdMiddleware)
+      .forRoutes('*');
   }
 }
