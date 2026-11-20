@@ -86,7 +86,7 @@ describe('Auth (e2e)', () => {
     email: 'ana@example.com',
     passwordHash: '',
     role: Role.member,
-    status: UserStatus.active,
+    status: UserStatus.active as UserStatus,
   };
 
   const prismaMock = {
