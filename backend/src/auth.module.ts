@@ -9,6 +9,8 @@ import { OwnershipService } from './services/ownership.service.js';
 import { PasswordService } from './services/password.service.js';
 import { RefreshTokenService } from './services/refresh-token.service.js';
 import { SecurityEventService } from './security/security-event.service.js';
+import { StaffController } from './controllers/staff.controller.js';
+import { StaffService } from './services/staff.service.js';
 
 @Module({
   imports: [
@@ -24,13 +26,14 @@ import { SecurityEventService } from './security/security-event.service.js';
       }),
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, StaffController],
   providers: [
     SecurityEventService,
     PasswordService,
     RefreshTokenService,
     OwnershipService,
     AuthService,
+    StaffService,
     JwtAuthGuard,
     RolesGuard,
   ],
