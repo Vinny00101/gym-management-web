@@ -9,6 +9,8 @@ import { OwnershipService } from './services/ownership.service.js';
 import { PasswordService } from './services/password.service.js';
 import { RefreshTokenService } from './services/refresh-token.service.js';
 import { SecurityEventService } from './security/security-event.service.js';
+import { MembersController } from './controllers/members.controller.js';
+import { MembersService } from './services/members.service.js';
 import { StaffController } from './controllers/staff.controller.js';
 import { StaffService } from './services/staff.service.js';
 
@@ -26,6 +28,7 @@ import { StaffService } from './services/staff.service.js';
       }),
     }),
   ],
+  controllers: [AuthController, MembersController],
   controllers: [AuthController, StaffController],
   providers: [
     SecurityEventService,
@@ -33,6 +36,7 @@ import { StaffService } from './services/staff.service.js';
     RefreshTokenService,
     OwnershipService,
     AuthService,
+    MembersService,
     StaffService,
     JwtAuthGuard,
     RolesGuard,
