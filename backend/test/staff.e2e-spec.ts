@@ -175,9 +175,11 @@ describe('Staff (e2e)', () => {
     expect(JSON.stringify(response.body)).not.toContain('password');
     expect(JSON.stringify(response.body)).not.toContain('Hash');
     const createCall = prismaMock.user.create.mock.calls[0]?.[0];
-    expect(createCall?.data.passwordHash).toBeDefined();
-    expect(createCall?.data.passwordHash).not.toBe('Senha@123');
-    expect((createCall?.data as unknown as Record<string, unknown>).password).toBeUndefined();
+    expect(createCall).toBeDefined();
+    if (!createCall) throw new Error('Staff create mock was not called');
+    expect(createCall.data.passwordHash).toBeDefined();
+    expect(createCall.data.passwordHash).not.toBe('Senha@123');
+    expect((createCall.data as unknown as Record<string, unknown>).password).toBeUndefined();
   });
 
   it('retorna 409 para email repetido', async () => {
