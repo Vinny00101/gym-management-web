@@ -11,6 +11,8 @@ import { RefreshTokenService } from './services/refresh-token.service.js';
 import { SecurityEventService } from './security/security-event.service.js';
 import { MembersController } from './controllers/members.controller.js';
 import { MembersService } from './services/members.service.js';
+import { StaffController } from './controllers/staff.controller.js';
+import { StaffService } from './services/staff.service.js';
 
 @Module({
   imports: [
@@ -27,6 +29,7 @@ import { MembersService } from './services/members.service.js';
     }),
   ],
   controllers: [AuthController, MembersController],
+  controllers: [AuthController, StaffController],
   providers: [
     SecurityEventService,
     PasswordService,
@@ -34,6 +37,7 @@ import { MembersService } from './services/members.service.js';
     OwnershipService,
     AuthService,
     MembersService,
+    StaffService,
     JwtAuthGuard,
     RolesGuard,
   ],
