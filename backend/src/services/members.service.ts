@@ -3,6 +3,11 @@ import type { AuthenticatedUser } from '../auth.types.js';
 import type { ListMembersDto } from '../common/dto/list-members.dto.js';
 import { Role } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { ConflictException, Injectable } from '@nestjs/common';
+import type { CreateMemberDto } from '../common/dto/create-member.dto.js';
+import { Role, UserStatus } from '../generated/prisma/enums.js';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { PasswordService } from './password.service.js';
 
 export type MemberResponse = {
   id: number;
@@ -18,6 +23,7 @@ export type MemberListResponse = {
   page: number;
   limit: number;
   totalPages: number;
+  status: UserStatus;
 };
 
 @Injectable()
@@ -68,6 +74,31 @@ export class MembersService {
   ): Promise<MemberResponse> {
     const member = await this.prisma.user.findFirst({
       where: { id: memberId, role: Role.member },
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly passwords: PasswordService,
+  ) {}
+
+  async create(body: CreateMemberDto): Promise<MemberResponse> {
+    const email = body.email.trim().toLowerCase();
+    const existing = await this.prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+
+    if (existing) {
+      throw new ConflictException('Email already exists');
+    }
+
+    const passwordHash = await this.passwords.hash(body.password);
+    return this.prisma.user.create({
+      data: {
+        name: body.name.trim(),
+        email,
+        passwordHash,
+        role: Role.member,
+        status: UserStatus.active,
+      },
       select: {
         id: true,
         name: true,
@@ -88,5 +119,7 @@ export class MembersService {
 
     const { instructorId: _instructorId, ...response } = member;
     return response;
+      },
+    });
   }
 }
