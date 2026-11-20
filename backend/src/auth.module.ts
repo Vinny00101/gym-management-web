@@ -28,8 +28,7 @@ import { StaffService } from './services/staff.service.js';
       }),
     }),
   ],
-  controllers: [AuthController, MembersController],
-  controllers: [AuthController, StaffController],
+  controllers: [AuthController, MembersController, StaffController],
   providers: [
     SecurityEventService,
     PasswordService,

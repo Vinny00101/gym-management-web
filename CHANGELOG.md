@@ -48,12 +48,12 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 
 **Gestão de usuários e membros**
 
-- [ ] Cadastro de instrutores e administradores pelo admin ([RF02](docs/requirements.md#requisitos-funcionais))
-- [ ] Cadastro de membros pelo admin, sempre começando como ativo (RF03, RD01, RD09)
-- [ ] Listagem de membros com filtro por situação; o instrutor vê só os seus (RF04)
-- [ ] Edição de dados e alteração de situação (ativo, inativo, suspenso) pelo admin (RF05, RD09)
-- [ ] Associação e troca do instrutor responsável, um por membro (RF06, RD05)
-- [ ] Consulta do próprio perfil e do instrutor pelo membro (RF07, RD11)
+- [x] Cadastro de instrutores e administradores pelo admin ([RF02](docs/requirements.md#requisitos-funcionais))
+- [x] Cadastro de membros pelo admin, sempre começando como ativo (RF03, RD01, RD09)
+- [x] Listagem de membros com filtro por situação; o instrutor vê só os seus (RF04)
+- [x] Edição de dados e alteração de situação (ativo, inativo, suspenso) pelo admin (RF05, RD09)
+- [x] Associação e troca do instrutor responsável, um por membro (RF06, RD05)
+- [x] Consulta do próprio perfil e do instrutor pelo membro (RF07, RD11)
 
 #### Fora desta etapa
 
