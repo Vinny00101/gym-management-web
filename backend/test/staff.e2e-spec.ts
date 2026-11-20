@@ -76,6 +76,17 @@ describe('Staff (e2e)', () => {
     ],
   ]);
 
+  type StaffCreateArgs = {
+    data: {
+      name: string;
+      email: string;
+      passwordHash: string;
+      role: Role;
+      status: UserStatus;
+    };
+    select: Record<string, boolean>;
+  };
+
   const prismaMock = {
     user: {
       findUnique: vi.fn(async ({ where, select }: {
@@ -93,10 +104,7 @@ describe('Staff (e2e)', () => {
             .filter(([, value]) => value !== undefined),
         );
       }),
-      create: vi.fn(async ({ data, select }: {
-        data: Record<string, unknown>;
-        select: Record<string, boolean>;
-      }) => {
+      create: vi.fn(async ({ data, select }: StaffCreateArgs) => {
         const created = {
           id: users.size + 1,
           name: data.name,
@@ -166,12 +174,10 @@ describe('Staff (e2e)', () => {
     });
     expect(JSON.stringify(response.body)).not.toContain('password');
     expect(JSON.stringify(response.body)).not.toContain('Hash');
-    const createCall = prismaMock.user.create.mock.calls[0]?.[0] as
-      | { data: { passwordHash: string; password?: string } }
-      | undefined;
+    const createCall = prismaMock.user.create.mock.calls[0]?.[0];
     expect(createCall?.data.passwordHash).toBeDefined();
     expect(createCall?.data.passwordHash).not.toBe('Senha@123');
-    expect(createCall?.data.password).toBeUndefined();
+    expect((createCall?.data as unknown as Record<string, unknown>).password).toBeUndefined();
   });
 
   it('retorna 409 para email repetido', async () => {
