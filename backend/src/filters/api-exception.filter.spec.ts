@@ -4,6 +4,7 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  HttpException,
   HttpStatus,
   NotFoundException,
   UnauthorizedException,
@@ -46,6 +47,11 @@ class ErrorTestController {
   @Get('unprocessable')
   unprocessable(): never {
     throw new UnprocessableEntityException('Invalid user state');
+  }
+
+  @Get('too-many-requests')
+  tooManyRequests(): never {
+    throw new HttpException('Too many requests', HttpStatus.TOO_MANY_REQUESTS);
   }
 
   @Get('prisma-unique')
@@ -103,6 +109,11 @@ describe('ApiExceptionFilter', () => {
       '/errors/unprocessable',
       HttpStatus.UNPROCESSABLE_ENTITY,
       'UNPROCESSABLE_ENTITY',
+    ],
+    [
+      '/errors/too-many-requests',
+      HttpStatus.TOO_MANY_REQUESTS,
+      'TOO_MANY_REQUESTS',
     ],
   ])('preserves HTTP status and code for %s', async (path, status, code) => {
     const response = await request(app.getHttpServer())

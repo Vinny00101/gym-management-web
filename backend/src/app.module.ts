@@ -5,9 +5,8 @@ import { TerminusModule } from '@nestjs/terminus';
 import { LoggerModule } from 'nestjs-pino';
 import Joi from 'joi';
 import { resolve } from 'node:path';
-import { AppController } from './controllers/app.controller.js';
 import { HealthController } from './controllers/health.controller.js';
-import { AppService } from './services/app.service.js';
+import { AuthGuardsModule } from './auth-guards.module.js';
 import { InputSanitizationMiddleware } from './middleware/input-sanitization.middleware.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import {
@@ -31,18 +30,27 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
           'any.required': 'DATABASE_URL is required',
           'string.empty': 'DATABASE_URL is required',
         }),
+        NODE_ENV: Joi.string()
+          .valid('development', 'test', 'production')
+          .default('development'),
         JWT_SECRET: Joi.string().required().messages({
           'any.required': 'JWT_SECRET is required',
           'string.empty': 'JWT_SECRET is required',
         }),
-        JWT_EXPIRES_IN: Joi.string().required().messages({
+        JWT_EXPIRES_IN: Joi.string().valid('15m').required().messages({
           'any.required': 'JWT_EXPIRES_IN is required',
           'string.empty': 'JWT_EXPIRES_IN is required',
+          'any.only': 'JWT_EXPIRES_IN must be 15m',
         }),
-        REFRESH_TOKEN_EXPIRES_IN: Joi.string().required().messages({
-          'any.required': 'REFRESH_TOKEN_EXPIRES_IN is required',
-          'string.empty': 'REFRESH_TOKEN_EXPIRES_IN is required',
-        }),
+        REFRESH_TOKEN_EXPIRES_IN: Joi.string()
+          .pattern(/^\d+[smhd]$/)
+          .required()
+          .messages({
+            'any.required': 'REFRESH_TOKEN_EXPIRES_IN is required',
+            'string.empty': 'REFRESH_TOKEN_EXPIRES_IN is required',
+            'string.pattern.base':
+              'REFRESH_TOKEN_EXPIRES_IN must look like 7d or 60m',
+          }),
         ADMIN_EMAIL: Joi.string().email().required().messages({
           'any.required': 'ADMIN_EMAIL is required',
           'string.empty': 'ADMIN_EMAIL is required',
@@ -73,6 +81,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
             'req.body.token',
             'req.body.accessToken',
             'req.body.refreshToken',
+            'req.cookies',
           ],
           censor: '[REDACTED]',
         },
@@ -93,6 +102,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       },
     }),
     PrismaModule,
+    AuthGuardsModule,
     TerminusModule,
     ObserveModule.forRoot({
       appKey: process.env.OBSERVE_APP_KEY ?? 'YOUR_APP_KEY',
@@ -100,8 +110,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       serviceId: 'backend',
     }),
   ],
-  controllers: [AppController, HealthController],
-  providers: [AppService],
+  controllers: [HealthController],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

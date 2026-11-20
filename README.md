@@ -21,7 +21,7 @@ Além das regras de negócio, o projeto foca em requisitos de qualidade: pipelin
 | Backend | Node.js 22 LTS (22.22.3 ou mais novo) ou 24, npm 11, TypeScript 6, NestJS 12 (ESM) |
 | Banco de dados | PostgreSQL com Prisma (ORM e migrações) |
 | Cache | Redis via `@nestjs/cache-manager` |
-| Autenticação | JWT (`@nestjs/jwt` + `passport-jwt`) e hash de senha com `argon2` |
+| Autenticação | JWT (`@nestjs/jwt` com HS256 e guard próprio) e hash de senha com `argon2` |
 | Validação | `class-validator` + `ValidationPipe` (`whitelist` e `forbidNonWhitelisted` ativos) |
 | Segurança | `helmet`, `@nestjs/throttler` (limite de tentativas no login) |
 | Logs | `nestjs-pino`, com request id em todas as requisições |
@@ -31,7 +31,9 @@ Além das regras de negócio, o projeto foca em requisitos de qualidade: pipelin
 | Infraestrutura | Docker Compose (API em 2 instâncias, PostgreSQL, Redis e NGINX) e GitHub Actions |
 | Qualidade de código | oxlint, Prettier e Conventional Commits |
 
-O backend usa **ESM**: imports relativos terminam em `.js` (`import { AppService } from './app.service.js'`), `__dirname` não existe (use `import.meta.dirname`) e os mocks dos testes usam `vi.fn()`, não `jest.fn()`.
+O backend usa **ESM**: imports relativos terminam em `.js` (`import { PasswordService } from './services/password.service.js'`), `__dirname` não existe (use `import.meta.dirname`) e os mocks dos testes usam `vi.fn()`, não `jest.fn()`.
+
+A estrutura de `backend/src` é organizada por tipo de responsabilidade: controllers em `controllers/`, regras de negócio em `services/`, e recursos reutilizados pela aplicação em `common/` (`decorators/`, `dto/`, `guards/`). Filtros, interceptadores, middlewares e validação ficam em `filters/`, `http/`, `middleware/` e `validation/`.
 
 ### Pipeline de requisição (RNF01)
 
@@ -56,6 +58,8 @@ As etapas do [RNF01](docs/requirements.md#requisitos-não-funcionais) correspond
 - **Um check-in por dia garantido no banco.** O RD03 é imposto por uma restrição única em `(memberId, data do check-in)`, e não só no código, porque com duas instâncias da API duas requisições simultâneas passariam pela checagem.
 - **Fuso horário.** Datas são gravadas em UTC e os cálculos por dia e por hora (RD03, RD12, RF15, RF17) usam `America/Sao_Paulo`.
 - **Configuração validada na inicialização.** `@nestjs/config` valida as variáveis de ambiente; a API não sobe sem `JWT_SECRET`, `DATABASE_URL` e as demais obrigatórias.
+- **Guards globais.** `ThrottlerGuard`, `JwtAuthGuard` e `RolesGuard` executam nessa ordem; rotas públicas (health, Swagger, `/auth/*`) são marcadas com `@Public()` e o usuário autenticado chega ao controller por `@CurrentUser()`. O padrão de posse do recurso dos services está em [docs/ownership-pattern.md](docs/ownership-pattern.md).
+- **Eventos de segurança.** Falhas de login e acessos negados viram eventos no log com e-mail tentado (quando aplicável), IP e request id — nunca com a senha.
 - **Health check.** `GET /health` (`@nestjs/terminus`) é usado pelo NGINX e pelo Docker para saber se cada instância está ativa.
 - **Repositório único.** API e frontend ficam no mesmo repositório (`gym-management-web`), o que simplifica o Docker Compose e o CI:
 

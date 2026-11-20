@@ -3,10 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TerminusModule } from '@nestjs/terminus';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
-import { AppController } from '../controllers/app.controller.js';
 import { HealthController } from '../controllers/health.controller.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { AppService } from '../services/app.service.js';
 import { configureHttp } from './configure-http.js';
 
 describe('HTTP configuration', () => {
@@ -15,9 +13,8 @@ describe('HTTP configuration', () => {
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [TerminusModule],
-      controllers: [AppController, HealthController],
+      controllers: [HealthController],
       providers: [
-        AppService,
         {
           provide: PrismaService,
           useValue: { $queryRaw: vi.fn().mockResolvedValue([{ result: 1 }]) },

@@ -6,8 +6,10 @@ import {
 } from '@nestjs/terminus';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { Public } from '../common/decorators/public.decorator.js';
 
 @ApiTags('health')
+@Public()
 @Controller()
 export class HealthController {
   constructor(

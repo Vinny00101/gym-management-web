@@ -1,7 +1,7 @@
-import argon2 from 'argon2';
 import Joi from 'joi';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../dist/generated/prisma/client.js';
+import { hashPassword } from '../dist/services/password.crypto.js';
 
 const { error, value } = Joi.object({
   DATABASE_URL: Joi.string().required(),
@@ -23,7 +23,9 @@ const prisma = new PrismaClient({
 });
 
 try {
-  const passwordHash = await argon2.hash(value.ADMIN_PASSWORD);
+  // O seed usa o mesmo PasswordService da API (via password.crypto.js),
+  // compilado pelo `npm run build` que precede `prisma db seed`.
+  const passwordHash = await hashPassword(value.ADMIN_PASSWORD);
   const admin = await prisma.user.upsert({
     where: { email: value.ADMIN_EMAIL },
     update: {},
