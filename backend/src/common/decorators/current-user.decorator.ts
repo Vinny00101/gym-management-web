@@ -3,7 +3,7 @@ import {
   createParamDecorator,
   ExecutionContext,
 } from '@nestjs/common';
-import type { AuthenticatedUser } from '../auth.types.js';
+import type { AuthenticatedUser } from '../../auth.types.js';
 
 /** Obtém o usuário autenticado (ou uma de suas propriedades) no controller. */
 export const CurrentUser = createParamDecorator(

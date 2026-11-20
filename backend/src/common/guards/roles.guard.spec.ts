@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Role } from '../../generated/prisma/enums.js';
-import type { AuthenticatedRequest } from '../auth.types.js';
+import type { AuthenticatedRequest } from '../../auth.types.js';
 import { RolesGuard } from './roles.guard.js';
 
 describe('RolesGuard', () => {

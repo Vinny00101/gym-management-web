@@ -5,10 +5,8 @@ import { TerminusModule } from '@nestjs/terminus';
 import { LoggerModule } from 'nestjs-pino';
 import Joi from 'joi';
 import { resolve } from 'node:path';
-import { AppController } from './controllers/app.controller.js';
 import { HealthController } from './controllers/health.controller.js';
-import { AppService } from './services/app.service.js';
-import { AuthGuardsModule } from './auth/auth-guards.module.js';
+import { AuthGuardsModule } from './auth-guards.module.js';
 import { InputSanitizationMiddleware } from './middleware/input-sanitization.middleware.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import {
@@ -112,8 +110,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       serviceId: 'backend',
     }),
   ],
-  controllers: [AppController, HealthController],
-  providers: [AppService],
+  controllers: [HealthController],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

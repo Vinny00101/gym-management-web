@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthController } from './auth.controller.js';
-import { AuthService } from './auth.service.js';
-import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
-import { RolesGuard } from './guards/roles.guard.js';
-import { OwnershipService } from './ownership.service.js';
-import { PasswordService } from './password.service.js';
-import { RefreshTokenService } from './refresh-token.service.js';
-import { SecurityEventService } from '../security/security-event.service.js';
+import { AuthController } from './controllers/auth.controller.js';
+import { AuthService } from './services/auth.service.js';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
+import { RolesGuard } from './common/guards/roles.guard.js';
+import { OwnershipService } from './services/ownership.service.js';
+import { PasswordService } from './services/password.service.js';
+import { RefreshTokenService } from './services/refresh-token.service.js';
+import { SecurityEventService } from './security/security-event.service.js';
 
 @Module({
   imports: [

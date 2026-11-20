@@ -22,8 +22,8 @@ Uma violação lança `ForbiddenException` (403), que o filtro global devolve no
 ```ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { OwnershipService } from '../auth/ownership.service.js';
-import type { AuthenticatedUser } from '../auth/auth.types.js';
+import { OwnershipService } from '../backend/src/services/ownership.service.js';
+import type { AuthenticatedUser } from '../backend/src/auth.types.js';
 
 @Injectable()
 export class MembersService {

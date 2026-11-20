@@ -15,6 +15,7 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 **Estrutura e infraestrutura**
 
 - [x] Estrutura do repositório único (`backend/`, `frontend/`, `docs/`)
+- [x] Organização de `backend/src` por responsabilidade: `controllers/`, `services/` e recursos compartilhados em `common/` (`decorators/`, `dto/`, `guards/`); controller e service de demonstração removidos
 - [x] Projeto NestJS 12 em `backend/` com TypeScript, oxlint, Prettier e Vitest
 - [x] `.env.example` com as variáveis da API
 - [x] Validação das variáveis de ambiente na inicialização com `@nestjs/config`

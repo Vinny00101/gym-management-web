@@ -8,7 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { Role } from '../../generated/prisma/enums.js';
 import { SecurityEventService } from '../../security/security-event.service.js';
-import type { AuthenticatedRequest } from '../auth.types.js';
+import type { AuthenticatedRequest } from '../../auth.types.js';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
 import { ROLES_KEY } from '../decorators/roles.decorator.js';
 

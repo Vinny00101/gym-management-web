@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../dist/generated/prisma/client.js';
-import { hashPassword } from '../dist/auth/password.crypto.js';
+import { hashPassword } from '../dist/services/password.crypto.js';
 
 const { error, value } = Joi.object({
   DATABASE_URL: Joi.string().required(),

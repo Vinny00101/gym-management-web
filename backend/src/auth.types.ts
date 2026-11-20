@@ -1,5 +1,5 @@
 import type { Request } from 'express';
-import type { Role } from '../generated/prisma/enums.js';
+import type { Role } from './generated/prisma/enums.js';
 
 /** Dados do usuário disponíveis para guards, decorators e services. */
 export interface AuthenticatedUser {

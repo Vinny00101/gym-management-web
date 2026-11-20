@@ -4,7 +4,7 @@ import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 
-describe('AppController (e2e)', () => {
+describe('App (e2e)', () => {
   let app: INestApplication<App>;
   let AppModule: typeof import('./../src/app.module.js').AppModule;
 
@@ -30,22 +30,19 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  it('/health (GET)', () => {
+    return request(app.getHttpServer()).get('/health').expect(200);
   });
 
   it('returns a generated X-Request-Id header', async () => {
-    const response = await request(app.getHttpServer()).get('/');
+    const response = await request(app.getHttpServer()).get('/health');
 
     expect(response.headers['x-request-id']).toBeDefined();
   });
 
   it('preserves an incoming X-Request-Id header', async () => {
     const response = await request(app.getHttpServer())
-      .get('/')
+      .get('/health')
       .set('X-Request-Id', 'test-request-id');
 
     expect(response.headers['x-request-id']).toBe('test-request-id');
