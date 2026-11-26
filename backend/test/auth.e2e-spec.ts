@@ -12,17 +12,18 @@ import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { setupApp } from '../src/app/setup-app.js';
-import { AuthGuardsModule } from '../src/auth-guards.module.js';
-import type { AuthenticatedUser } from '../src/auth.types.js';
-import { CurrentUser } from '../src/common/decorators/current-user.decorator.js';
-import { Public } from '../src/common/decorators/public.decorator.js';
-import { Roles } from '../src/common/decorators/roles.decorator.js';
-import { hashPassword } from '../src/services/password.crypto.js';
-import { REFRESH_COOKIE_NAME } from '../src/services/refresh-token.service.js';
+import { AuthGuardsModule } from '../src/shared/identity/auth-guards.module.js';
+import type { AuthenticatedUser } from '../src/shared/identity/auth.types.js';
+import { CurrentUser } from '../src/shared/identity/decorators/current-user.decorator.js';
+import { Public } from '../src/shared/identity/decorators/public.decorator.js';
+import { Roles } from '../src/shared/identity/decorators/roles.decorator.js';
+import { AuthModule } from '../src/modules/auth/auth.module.js';
+import { hashPassword } from '../src/modules/auth/password.crypto.js';
+import { REFRESH_COOKIE_NAME } from '../src/modules/auth/refresh-token.service.js';
 import { Role, UserStatus } from '../src/generated/prisma/enums.js';
-import { RequestIdMiddleware } from '../src/middleware/request-id.middleware.js';
-import { PrismaModule } from '../src/prisma/prisma.module.js';
-import { PrismaService } from '../src/prisma/prisma.service.js';
+import { RequestIdMiddleware } from '../src/shared/middleware/request-id.middleware.js';
+import { PrismaModule } from '../src/infra/database/prisma.module.js';
+import { PrismaService } from '../src/infra/database/prisma.service.js';
 
 @Controller('protected')
 class ProtectedTestController {
@@ -62,6 +63,7 @@ class ProtectedTestController {
     LoggerModule.forRoot({ pinoHttp: { enabled: false } }),
     PrismaModule,
     AuthGuardsModule,
+    AuthModule,
   ],
   controllers: [ProtectedTestController],
 })
@@ -153,7 +155,7 @@ describe('Auth (e2e)', () => {
 
   async function login(password = 'Senha@123') {
     const response = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/v1/auth/login')
       .send({ email: user.email, password });
     return response;
   }
@@ -176,13 +178,13 @@ describe('Auth (e2e)', () => {
     expect(cookie).toContain(`${REFRESH_COOKIE_NAME}=`);
     expect(cookie).toContain('HttpOnly');
     expect(cookie).toContain('SameSite=Strict');
-    expect(cookie).toContain('Path=/auth');
+    expect(cookie).toContain('Path=/api/v1/auth');
     expect(cookie).not.toContain('Secure');
   });
 
   it('retorna 401 com a mesma mensagem para e-mail inexistente e senha errada', async () => {
     const unknownEmail = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/v1/auth/login')
       .send({ email: 'nobody@example.com', password: 'Senha@123' });
     const wrongPassword = await login('senha-errada');
 
@@ -207,12 +209,12 @@ describe('Auth (e2e)', () => {
   });
 
   it('exige token nas rotas sem @Public() e libera as marcadas', async () => {
-    await request(app.getHttpServer()).get('/protected/me').expect(401);
-    await request(app.getHttpServer()).get('/protected/public').expect(200);
+    await request(app.getHttpServer()).get('/api/v1/protected/me').expect(401);
+    await request(app.getHttpServer()).get('/api/v1/protected/public').expect(200);
 
     const { body } = await login();
     const me = await request(app.getHttpServer())
-      .get('/protected/me')
+      .get('/api/v1/protected/me')
       .set('Authorization', `Bearer ${body.accessToken}`)
       .expect(200);
 
@@ -223,7 +225,7 @@ describe('Auth (e2e)', () => {
     const { body } = await login();
 
     const response = await request(app.getHttpServer())
-      .get('/protected/admin')
+      .get('/api/v1/protected/admin')
       .set('Authorization', `Bearer ${body.accessToken}`);
 
     expect(response.status).toBe(403);
@@ -235,7 +237,7 @@ describe('Auth (e2e)', () => {
     const cookie = headers['set-cookie'][0];
 
     const refreshed = await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/api/v1/auth/refresh')
       .set('Cookie', cookie)
       .expect(200);
 
@@ -246,7 +248,7 @@ describe('Auth (e2e)', () => {
     expect(storedTokens.size).toBe(2);
 
     await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/api/v1/auth/refresh')
       .set('Cookie', cookie)
       .expect(401);
   });
@@ -256,13 +258,13 @@ describe('Auth (e2e)', () => {
     const cookie = headers['set-cookie'][0];
 
     await request(app.getHttpServer())
-      .post('/auth/logout')
+      .post('/api/v1/auth/logout')
       .set('Cookie', cookie)
       .expect(204);
 
     expect([...storedTokens.values()].every((token) => token.revokedAt !== null)).toBe(true);
     const cleared = await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/api/v1/auth/refresh')
       .set('Cookie', cookie)
       .expect(401);
     expect(cleared.body.code).toBe('UNAUTHORIZED');

@@ -11,11 +11,12 @@ import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { setupApp } from '../src/app/setup-app.js';
-import { AuthGuardsModule } from '../src/auth-guards.module.js';
+import { AuthGuardsModule } from '../src/shared/identity/auth-guards.module.js';
+import { MembersModule } from '../src/modules/members/members.module.js';
 import { Role, UserStatus } from '../src/generated/prisma/enums.js';
-import { RequestIdMiddleware } from '../src/middleware/request-id.middleware.js';
-import { PrismaModule } from '../src/prisma/prisma.module.js';
-import { PrismaService } from '../src/prisma/prisma.service.js';
+import { RequestIdMiddleware } from '../src/shared/middleware/request-id.middleware.js';
+import { PrismaModule } from '../src/infra/database/prisma.module.js';
+import { PrismaService } from '../src/infra/database/prisma.service.js';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { PrismaService } from '../src/prisma/prisma.service.js';
     LoggerModule.forRoot({ pinoHttp: { enabled: false } }),
     PrismaModule,
     AuthGuardsModule,
+    MembersModule,
   ],
 })
 class MembersTrainerProfileTestModule implements NestModule {
@@ -127,7 +129,7 @@ describe('Trainer association and profile (e2e)', () => {
   it('admin associa instrutor ao membro', async () => {
     const token = await tokenFor(1, Role.admin);
     const response = await request(app.getHttpServer())
-      .put('/members/3/trainer')
+      .put('/api/v1/members/3/trainer')
       .set('Authorization', `Bearer ${token}`)
       .send({ trainerId: 2 })
       .expect(200);
@@ -142,7 +144,7 @@ describe('Trainer association and profile (e2e)', () => {
   it('id que nao pertence a instrutor retorna 422', async () => {
     const token = await tokenFor(1, Role.admin);
     await request(app.getHttpServer())
-      .put('/members/3/trainer')
+      .put('/api/v1/members/3/trainer')
       .set('Authorization', `Bearer ${token}`)
       .send({ trainerId: 1 })
       .expect(422);
@@ -151,7 +153,7 @@ describe('Trainer association and profile (e2e)', () => {
   it('membro acessa proprio perfil com instrutor responsavel', async () => {
     const token = await tokenFor(3, Role.member);
     const response = await request(app.getHttpServer())
-      .get('/me')
+      .get('/api/v1/me')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
@@ -163,7 +165,7 @@ describe('Trainer association and profile (e2e)', () => {
   it('instrutor nao acessa /me', async () => {
     const token = await tokenFor(2, Role.trainer);
     await request(app.getHttpServer())
-      .get('/me')
+      .get('/api/v1/me')
       .set('Authorization', `Bearer ${token}`)
       .expect(403);
   });
@@ -171,7 +173,7 @@ describe('Trainer association and profile (e2e)', () => {
   it('membro inexistente retorna 404 ao associar instrutor', async () => {
     const token = await tokenFor(1, Role.admin);
     await request(app.getHttpServer())
-      .put('/members/999/trainer')
+      .put('/api/v1/members/999/trainer')
       .set('Authorization', `Bearer ${token}`)
       .send({ trainerId: 2 })
       .expect(404);

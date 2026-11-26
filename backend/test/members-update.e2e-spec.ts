@@ -11,11 +11,12 @@ import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { setupApp } from '../src/app/setup-app.js';
-import { AuthGuardsModule } from '../src/auth-guards.module.js';
+import { AuthGuardsModule } from '../src/shared/identity/auth-guards.module.js';
+import { MembersModule } from '../src/modules/members/members.module.js';
 import { Role, UserStatus } from '../src/generated/prisma/enums.js';
-import { RequestIdMiddleware } from '../src/middleware/request-id.middleware.js';
-import { PrismaModule } from '../src/prisma/prisma.module.js';
-import { PrismaService } from '../src/prisma/prisma.service.js';
+import { RequestIdMiddleware } from '../src/shared/middleware/request-id.middleware.js';
+import { PrismaModule } from '../src/infra/database/prisma.module.js';
+import { PrismaService } from '../src/infra/database/prisma.service.js';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { PrismaService } from '../src/prisma/prisma.service.js';
     LoggerModule.forRoot({ pinoHttp: { enabled: false } }),
     PrismaModule,
     AuthGuardsModule,
+    MembersModule,
   ],
 })
 class MembersUpdateTestModule implements NestModule {
@@ -117,7 +119,7 @@ describe('Members update (e2e)', () => {
   it('admin atualiza dados pessoais', async () => {
     const token = await tokenFor(1, Role.admin);
     const response = await request(app.getHttpServer())
-      .patch('/members/3')
+      .patch('/api/v1/members/3')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Ana Maria', email: 'ana.nova@academia.com' })
       .expect(200);
@@ -133,7 +135,7 @@ describe('Members update (e2e)', () => {
   it('admin atualiza situacao valida', async () => {
     const token = await tokenFor(1, Role.admin);
     const response = await request(app.getHttpServer())
-      .patch('/members/3/status')
+      .patch('/api/v1/members/3/status')
       .set('Authorization', `Bearer ${token}`)
       .send({ status: UserStatus.suspended })
       .expect(200);
@@ -144,7 +146,7 @@ describe('Members update (e2e)', () => {
   it('rejeita situacao invalida', async () => {
     const token = await tokenFor(1, Role.admin);
     await request(app.getHttpServer())
-      .patch('/members/3/status')
+      .patch('/api/v1/members/3/status')
       .set('Authorization', `Bearer ${token}`)
       .send({ status: 'blocked' })
       .expect(400);
@@ -153,7 +155,7 @@ describe('Members update (e2e)', () => {
   it('membro inexistente retorna 404', async () => {
     const token = await tokenFor(1, Role.admin);
     await request(app.getHttpServer())
-      .patch('/members/999/status')
+      .patch('/api/v1/members/999/status')
       .set('Authorization', `Bearer ${token}`)
       .send({ status: UserStatus.inactive })
       .expect(404);
@@ -162,7 +164,7 @@ describe('Members update (e2e)', () => {
   it('instrutor recebe 403', async () => {
     const token = await tokenFor(2, Role.trainer);
     await request(app.getHttpServer())
-      .patch('/members/3/status')
+      .patch('/api/v1/members/3/status')
       .set('Authorization', `Bearer ${token}`)
       .send({ status: UserStatus.inactive })
       .expect(403);

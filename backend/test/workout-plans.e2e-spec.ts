@@ -11,14 +11,12 @@ import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { setupApp } from '../src/app/setup-app.js';
-import { AuthGuardsModule } from '../src/auth-guards.module.js';
-import { WorkoutPlanController } from '../src/controllers/workout-plans.controller.js';
+import { AuthGuardsModule } from '../src/shared/identity/auth-guards.module.js';
+import { WorkoutPlansModule } from '../src/modules/workout-plans/workout-plans.module.js';
 import { DivisionType, Role, UserStatus } from '../src/generated/prisma/enums.js';
-import { RequestIdMiddleware } from '../src/middleware/request-id.middleware.js';
-import { PrismaModule } from '../src/prisma/prisma.module.js';
-import { PrismaService } from '../src/prisma/prisma.service.js';
-import { OwnershipService } from '../src/services/ownership.service.js';
-import { WorkoutPlanService } from '../src/services/workout-plans.service.js';
+import { RequestIdMiddleware } from '../src/shared/middleware/request-id.middleware.js';
+import { PrismaModule } from '../src/infra/database/prisma.module.js';
+import { PrismaService } from '../src/infra/database/prisma.service.js';
 
 @Module({
   imports: [
@@ -38,9 +36,8 @@ import { WorkoutPlanService } from '../src/services/workout-plans.service.js';
     LoggerModule.forRoot({ pinoHttp: { enabled: false } }),
     PrismaModule,
     AuthGuardsModule,
+    WorkoutPlansModule,
   ],
-  controllers: [WorkoutPlanController],
-  providers: [WorkoutPlanService, OwnershipService],
 })
 class WorkoutPlansTestModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
@@ -186,7 +183,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     const response = await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send(validBody)
       .expect(201);
@@ -220,7 +217,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     const response = await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Treino B',
@@ -244,13 +241,13 @@ describe('Workout plans (e2e)', () => {
     const memberToken = await tokenFor(10, Role.member);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${adminToken}`)
       .send(validBody)
       .expect(403);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${memberToken}`)
       .send(validBody)
       .expect(403);
@@ -262,7 +259,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...validBody, memberId: 11 })
       .expect(403);
@@ -274,7 +271,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     const response = await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...validBody, divisions: [] })
       .expect(400);
@@ -290,7 +287,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({
         ...validBody,
@@ -305,7 +302,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...validBody, activePlanId: 999 })
       .expect(400);
@@ -317,7 +314,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...validBody, memberId: 999 })
       .expect(404);
