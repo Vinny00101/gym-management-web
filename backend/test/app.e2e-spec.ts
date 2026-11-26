@@ -3,16 +3,18 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { setupApp } from './../src/app/setup-app.js';
-import { PrismaService } from './../src/prisma/prisma.service.js';
+import { PrismaService } from './../src/infra/database/prisma.service.js';
 
 describe('App (e2e)', () => {
   let app: INestApplication<App>;
-  let AppModule: typeof import('./../src/app.module.js').AppModule;
+  let AppModule: typeof import('./../src/app/app.module.js').AppModule;
 
   beforeAll(async () => {
     // O seed precisa de ADMIN_NAME; o teste não depende do .env da máquina.
     process.env.ADMIN_NAME ??= 'Administrador';
-    ({ AppModule } = await import('./../src/app.module.js'));
+    // Cache em memória: e2e não deve exigir Redis nem rede.
+    process.env.NODE_ENV ??= 'test';
+    ({ AppModule } = await import('./../src/app/app.module.js'));
   });
 
   beforeEach(async () => {

@@ -1,11 +1,11 @@
 import { VersioningType, type INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
-import { ApiExceptionFilter } from '../filters/api-exception.filter.js';
-import { configureHttp } from '../http/configure-http.js';
-import { SensitiveDataInterceptor } from '../http/sensitive-data.interceptor.js';
-import { SecurityEventInterceptor } from '../security/security-event.interceptor.js';
-import { SecurityEventService } from '../security/security-event.service.js';
-import { configureValidation } from '../validation/configure-validation.js';
+import { configureHttp } from '../infra/http/configure-http.js';
+import { ApiExceptionFilter } from '../shared/errors/api-exception.filter.js';
+import { SecurityEventInterceptor } from '../shared/security/security-event.interceptor.js';
+import { SecurityEventService } from '../shared/security/security-event.service.js';
+import { SensitiveDataInterceptor } from '../shared/security/sensitive-data.interceptor.js';
+import { configureValidation } from '../shared/middleware/configure-validation.js';
 
 /**
  * Pipeline HTTP compartilhada por `main.ts` e pelos testes e2e.
