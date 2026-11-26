@@ -13,7 +13,11 @@ import type { App } from 'supertest/types.js';
 import { setupApp } from '../src/app/setup-app.js';
 import { AuthGuardsModule } from '../src/shared/identity/auth-guards.module.js';
 import { WorkoutPlansModule } from '../src/modules/workout-plans/workout-plans.module.js';
-import { DivisionType, Role, UserStatus } from '../src/generated/prisma/enums.js';
+import {
+  DivisionType,
+  Role,
+  UserStatus,
+} from '../src/generated/prisma/enums.js';
 import { RequestIdMiddleware } from '../src/shared/middleware/request-id.middleware.js';
 import { PrismaModule } from '../src/infra/database/prisma.module.js';
 import { PrismaService } from '../src/infra/database/prisma.service.js';
@@ -118,7 +122,10 @@ describe('Workout plans (e2e)', () => {
           return Object.fromEntries(
             Object.entries(select)
               .filter(([, included]) => included)
-              .map(([key]) => [key, (user as unknown as Record<string, unknown>)[key]])
+              .map(([key]) => [
+                key,
+                (user as unknown as Record<string, unknown>)[key],
+              ])
               .filter(([, value]) => value !== undefined),
           );
         },
@@ -127,6 +134,9 @@ describe('Workout plans (e2e)', () => {
       updateMany: vi.fn(),
     },
     workoutPlan: {
+      findUnique: vi.fn(async ({ where }: any) =>
+        where.id === 100 ? { id: 100, member: users.get(10) } : null,
+      ),
       create: vi.fn(async ({ data }: any) => ({
         id: 100,
         name: data.name,
@@ -143,6 +153,17 @@ describe('Workout plans (e2e)', () => {
         createdAt: new Date('2026-11-26T12:00:00.000Z'),
         updatedAt: new Date('2026-11-26T12:00:00.000Z'),
       })),
+    },
+    workoutDivision: {
+      count: vi.fn(async () => 1),
+      create: vi.fn(async ({ data }: any) => ({ id: 101, ...data })),
+      findUnique: vi.fn(async ({ where }: any) =>
+        where.id === 101 ? { id: 101, planId: 100 } : null,
+      ),
+    },
+    exercise: {
+      count: vi.fn(async () => 2),
+      create: vi.fn(async ({ data }: any) => ({ id: 201, ...data })),
     },
     $connect: vi.fn(),
     $disconnect: vi.fn(),
@@ -230,10 +251,9 @@ describe('Workout plans (e2e)', () => {
       .expect(201);
 
     expect(response.body.objective).toBe('');
-    expect(response.body.divisions.map((item: { order: number }) => item.order)).toEqual([
-      1,
-      2,
-    ]);
+    expect(
+      response.body.divisions.map((item: { order: number }) => item.order),
+    ).toEqual([1, 2]);
   });
 
   it('retorna 403 para admin e para member', async () => {
@@ -320,6 +340,82 @@ describe('Workout plans (e2e)', () => {
       .expect(404);
 
     expect(prismaMock.workoutPlan.create).not.toHaveBeenCalled();
+  });
+
+  it('retorna 201 ao adicionar divisão ao plano', async () => {
+    const token = await tokenFor(2, Role.trainer);
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/divisions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Costas', type: DivisionType.muscleGroup })
+      .expect(201);
+
+    expect(response.body).toMatchObject({
+      planId: 100,
+      name: 'Costas',
+      type: DivisionType.muscleGroup,
+      order: 2,
+    });
+  });
+
+  it('retorna 201 ao adicionar exercício à divisão', async () => {
+    const token = await tokenFor(2, Role.trainer);
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/divisions/101/exercises')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Supino reto', sets: 3, repetitions: 12 })
+      .expect(201);
+
+    expect(response.body).toMatchObject({
+      divisionId: 101,
+      name: 'Supino reto',
+      sets: 3,
+      repetitions: 12,
+      order: 3,
+    });
+  });
+
+  it('retorna 400 para séries ou repetições inválidas', async () => {
+    const token = await tokenFor(2, Role.trainer);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/divisions/101/exercises')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Supino', sets: 0, repetitions: 1.5 })
+      .expect(400);
+
+    expect(prismaMock.exercise.create).not.toHaveBeenCalled();
+  });
+
+  it('retorna 404 para divisão de outro plano', async () => {
+    const token = await tokenFor(2, Role.trainer);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/divisions/999/exercises')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Supino', sets: 3, repetitions: 12 })
+      .expect(404);
+
+    expect(prismaMock.exercise.create).not.toHaveBeenCalled();
+  });
+
+  it('retorna 403 para outro instrutor e para papel não autorizado', async () => {
+    const trainerToken = await tokenFor(3, Role.trainer);
+    const memberToken = await tokenFor(10, Role.member);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/divisions/101/exercises')
+      .set('Authorization', `Bearer ${trainerToken}`)
+      .send({ name: 'Supino', sets: 3, repetitions: 12 })
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/divisions/101/exercises')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ name: 'Supino', sets: 3, repetitions: 12 })
+      .expect(403);
   });
 
   afterAll(async () => {

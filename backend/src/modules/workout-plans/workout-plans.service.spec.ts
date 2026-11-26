@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { CreateWorkoutPlanDto } from './dto/create-workout-plan.dto.js';
+import type { CreateDivisionPlanDto } from './dto/create-divisionplan.dto.js';
+import type { CreateExerciseDto } from './dto/create-exercise.dto.js';
 import { DivisionType, Role } from '../../generated/prisma/enums.js';
 import type { PrismaService } from '../../infra/database/prisma.service.js';
 import { OwnershipService } from '../../shared/identity/ownership.service.js';
@@ -21,6 +23,16 @@ describe('WorkoutPlanService', () => {
       updateMany: vi.fn(),
     },
     workoutPlan: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    workoutDivision: {
+      count: vi.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    exercise: {
+      count: vi.fn(),
       create: vi.fn(),
     },
   };
@@ -49,6 +61,24 @@ describe('WorkoutPlanService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prisma.user.findUnique.mockResolvedValue(member);
+    prisma.workoutPlan.findUnique.mockResolvedValue({
+      id: 100,
+      member,
+    });
+    prisma.workoutDivision.count.mockResolvedValue(1);
+    prisma.workoutDivision.findUnique.mockResolvedValue({
+      id: 10,
+      planId: 100,
+    });
+    prisma.workoutDivision.create.mockImplementation(async ({ data }: any) => ({
+      id: 10,
+      ...data,
+    }));
+    prisma.exercise.count.mockResolvedValue(2);
+    prisma.exercise.create.mockImplementation(async ({ data }: any) => ({
+      id: 20,
+      ...data,
+    }));
     prisma.workoutPlan.create.mockImplementation(async ({ data }: any) => ({
       id: 100,
       name: data.name,
@@ -140,11 +170,9 @@ describe('WorkoutPlanService', () => {
 
     const data = prisma.workoutPlan.create.mock.calls[0]?.[0].data;
     expect(data.objective).toBe('');
-    expect(data.divisions.create.map((item: { order: number }) => item.order)).toEqual([
-      1,
-      2,
-      7,
-    ]);
+    expect(
+      data.divisions.create.map((item: { order: number }) => item.order),
+    ).toEqual([1, 2, 7]);
   });
 
   it('rejeita lista vazia de divisões antes de consultar ou escrever', async () => {
@@ -189,9 +217,7 @@ describe('WorkoutPlanService', () => {
       service.create(
         trainer,
         makeDto({
-          divisions: [
-            { name: 'Peitoral', type: 'invalid' as DivisionType },
-          ],
+          divisions: [{ name: 'Peitoral', type: 'invalid' as DivisionType }],
         }),
       ),
     ).rejects.toMatchObject({
@@ -230,5 +256,113 @@ describe('WorkoutPlanService', () => {
 
     expect(prisma.user.update).not.toHaveBeenCalled();
     expect(prisma.user.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('adiciona uma divisão ao plano existente', async () => {
+    const body: CreateDivisionPlanDto = {
+      name: '  Costas  ',
+      type: DivisionType.muscleGroup,
+    };
+
+    const result = await service.addDivision(trainer, 100, body);
+
+    expect(assertOwnership).toHaveBeenCalledWith(trainer, member);
+    expect(prisma.workoutDivision.create).toHaveBeenCalledWith({
+      data: {
+        planId: 100,
+        name: 'Costas',
+        type: DivisionType.muscleGroup,
+        order: 2,
+      },
+    });
+    expect(result.order).toBe(2);
+  });
+
+  it('adiciona exercício válido à divisão correta', async () => {
+    const body: CreateExerciseDto = {
+      name: '  Supino reto  ',
+      sets: 3,
+      repetitions: 12,
+      notes: '  Controle a descida  ',
+    };
+
+    const result = await service.addExercise(trainer, 100, 10, body);
+
+    expect(prisma.workoutDivision.findUnique).toHaveBeenCalledWith({
+      where: { id: 10 },
+      select: { id: true, planId: true },
+    });
+    expect(prisma.exercise.create).toHaveBeenCalledWith({
+      data: {
+        divisionId: 10,
+        name: 'Supino reto',
+        sets: 3,
+        repetitions: 12,
+        notes: 'Controle a descida',
+        order: 3,
+      },
+    });
+    expect(result.order).toBe(3);
+  });
+
+  it('rejeita séries e repetições inválidas', async () => {
+    await expect(
+      service.addExercise(trainer, 100, 10, {
+        name: 'Supino',
+        sets: 0,
+        repetitions: -1,
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(prisma.exercise.create).not.toHaveBeenCalled();
+  });
+
+  it('rejeita divisão pertencente a outro plano', async () => {
+    prisma.workoutDivision.findUnique.mockResolvedValue({
+      id: 10,
+      planId: 999,
+    });
+
+    await expect(
+      service.addExercise(trainer, 100, 10, {
+        name: 'Supino',
+        sets: 3,
+        repetitions: 12,
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(prisma.exercise.create).not.toHaveBeenCalled();
+  });
+
+  it('nega instrutor sem posse do membro do plano', async () => {
+    prisma.workoutPlan.findUnique.mockResolvedValue({
+      id: 100,
+      member: otherMember,
+    });
+
+    await expect(
+      service.addExercise(trainer, 100, 10, {
+        name: 'Supino',
+        sets: 3,
+        repetitions: 12,
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+
+    expect(prisma.exercise.create).not.toHaveBeenCalled();
+  });
+
+  it('retorna 404 para plano inexistente', async () => {
+    prisma.workoutPlan.findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.addExercise(trainer, 999, 10, {
+        name: 'Supino',
+        sets: 3,
+        repetitions: 12,
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(prisma.workoutDivision.findUnique).not.toHaveBeenCalled();
+    expect(prisma.exercise.create).not.toHaveBeenCalled();
   });
 });
