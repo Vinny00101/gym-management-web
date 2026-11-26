@@ -7,7 +7,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Role } from '../../generated/prisma/enums.js';
+import { Role } from '../../../generated/prisma/enums.js';
 
 export class CreateStaffDto {
   @ApiProperty({ example: 'Maria Silva' })

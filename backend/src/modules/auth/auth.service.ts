@@ -1,10 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { Request, Response } from 'express';
-import { Role, UserStatus } from '../generated/prisma/enums.js';
-import { PrismaService } from '../infra/database/prisma.service.js';
-import type { LoginResult } from '../shared/identity/auth.types.js';
-import { SecurityEventService } from '../shared/security/security-event.service.js';
+import { Role, UserStatus } from '../../generated/prisma/enums.js';
+import { PrismaService } from '../../infra/database/prisma.service.js';
+import type { LoginResult } from '../../shared/identity/auth.types.js';
+import { SecurityEventService } from '../../shared/security/security-event.service.js';
 import { DUMMY_PASSWORD_HASH } from './password.crypto.js';
 import { PasswordService } from './password.service.js';
 import { RefreshTokenService } from './refresh-token.service.js';

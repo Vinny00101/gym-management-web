@@ -7,7 +7,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { UserStatus } from '../../generated/prisma/enums.js';
+import { UserStatus } from '../../../generated/prisma/enums.js';
 
 export class ListMembersDto {
   @ApiPropertyOptional({ enum: UserStatus })

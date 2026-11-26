@@ -10,11 +10,11 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { ApiBody, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
-import type { LoginResult } from '../shared/identity/auth.types.js';
-import { AuthService } from '../services/auth.service.js';
-import { Public } from '../shared/identity/decorators/public.decorator.js';
-import { LoginDto } from '../common/dto/login.dto.js';
-import { REFRESH_COOKIE_NAME } from '../services/refresh-token.service.js';
+import type { LoginResult } from '../../shared/identity/auth.types.js';
+import { AuthService } from './auth.service.js';
+import { Public } from '../../shared/identity/decorators/public.decorator.js';
+import { LoginDto } from './dto/login.dto.js';
+import { REFRESH_COOKIE_NAME } from './refresh-token.service.js';
 
 @Public()
 @ApiTags('auth')

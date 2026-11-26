@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from "class-validator";
-import { DivisionType } from "../../generated/prisma/enums.js";
+import { DivisionType } from "../../../generated/prisma/enums.js";
 
 export class CreateDivisionPlanDto {
     @ApiProperty({ example: "Segunda-feira - Peitoral" })
