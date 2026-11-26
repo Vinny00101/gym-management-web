@@ -10,7 +10,7 @@ import { PasswordService } from './password.service.js';
 import { RefreshTokenService } from './refresh-token.service.js';
 
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
-const INVALID_CREDENTIALS_MESSAGE = 'Invalid email or password';
+const INVALID_CREDENTIALS_MESSAGE = 'E-mail ou senha inválidos';
 
 @Injectable()
 export class AuthService {

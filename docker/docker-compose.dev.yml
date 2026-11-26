@@ -11,7 +11,9 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # Imagens postgres:18+ esperam o volume na raiz /var/lib/postgresql
+      # (o layout antigo em /var/lib/postgresql/data não é mais suportado).
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s

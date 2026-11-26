@@ -31,6 +31,6 @@ export class OwnershipService {
       return;
     }
 
-    throw new ForbiddenException('You do not have access to this resource');
+    throw new ForbiddenException('Você não tem acesso a este recurso.');
   }
 }
