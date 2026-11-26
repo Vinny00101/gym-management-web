@@ -102,7 +102,7 @@ describe('AuthService', () => {
     await expect(
       service.login('nobody@example.com', 'Senha@123', request, response),
     ).rejects.toThrow(
-      new UnauthorizedException('Invalid email or password'),
+      new UnauthorizedException('E-mail ou senha inválidos'),
     );
     expect(events.loginFailed).toHaveBeenCalledWith(
       request,
@@ -115,7 +115,7 @@ describe('AuthService', () => {
 
     await expect(
       service.login('ana@example.com', 'senha-errada', request, response),
-    ).rejects.toThrow('Invalid email or password');
+    ).rejects.toThrow('E-mail ou senha inválidos');
     expect(events.loginFailed).toHaveBeenCalledWith(request, 'ana@example.com');
     expect(jwt.signAsync).not.toHaveBeenCalled();
     expect(refresh.issue).not.toHaveBeenCalled();
@@ -128,7 +128,7 @@ describe('AuthService', () => {
 
       await expect(
         service.login('ana@example.com', 'Senha@123', request, response),
-      ).rejects.toThrow('Invalid email or password');
+      ).rejects.toThrow('E-mail ou senha inválidos');
       expect(events.loginFailed).toHaveBeenCalledWith(
         request,
         'ana@example.com',
