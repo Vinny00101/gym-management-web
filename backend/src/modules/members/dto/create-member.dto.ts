@@ -8,7 +8,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { UserStatus } from '../../generated/prisma/enums.js';
+import { UserStatus } from '../../../generated/prisma/enums.js';
 
 export class CreateMemberDto {
   @ApiProperty({ example: 'Ana Souza' })

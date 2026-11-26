@@ -4,15 +4,15 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import type { AuthenticatedUser } from '../shared/identity/auth.types.js';
-import type { AssignTrainerDto } from '../common/dto/assign-trainer.dto.js';
-import type { CreateMemberDto } from '../common/dto/create-member.dto.js';
-import type { ListMembersDto } from '../common/dto/list-members.dto.js';
-import type { UpdateMemberStatusDto } from '../common/dto/update-member-status.dto.js';
-import type { UpdateMemberDto } from '../common/dto/update-member.dto.js';
-import { Role, UserStatus } from '../generated/prisma/enums.js';
-import { PrismaService } from '../infra/database/prisma.service.js';
-import { PasswordService } from './password.service.js';
+import type { AuthenticatedUser } from '../../shared/identity/auth.types.js';
+import type { AssignTrainerDto } from './dto/assign-trainer.dto.js';
+import type { CreateMemberDto } from './dto/create-member.dto.js';
+import type { ListMembersDto } from './dto/list-members.dto.js';
+import type { UpdateMemberStatusDto } from './dto/update-member-status.dto.js';
+import type { UpdateMemberDto } from './dto/update-member.dto.js';
+import { Role, UserStatus } from '../../generated/prisma/enums.js';
+import { PrismaService } from '../../infra/database/prisma.service.js';
+import { PasswordService } from '../auth/password.service.js';
 
 export type MemberResponse = {
   id: number;

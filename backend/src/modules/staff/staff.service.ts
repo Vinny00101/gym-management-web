@@ -1,8 +1,8 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import type { CreateStaffDto } from '../common/dto/create-staff.dto.js';
-import { Role, UserStatus } from '../generated/prisma/enums.js';
-import { PrismaService } from '../infra/database/prisma.service.js';
-import { PasswordService } from './password.service.js';
+import type { CreateStaffDto } from './dto/create-staff.dto.js';
+import { Role, UserStatus } from '../../generated/prisma/enums.js';
+import { PrismaService } from '../../infra/database/prisma.service.js';
+import { PasswordService } from '../auth/password.service.js';
 
 export type StaffResponse = {
   id: number;

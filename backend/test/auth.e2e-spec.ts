@@ -17,8 +17,9 @@ import type { AuthenticatedUser } from '../src/shared/identity/auth.types.js';
 import { CurrentUser } from '../src/shared/identity/decorators/current-user.decorator.js';
 import { Public } from '../src/shared/identity/decorators/public.decorator.js';
 import { Roles } from '../src/shared/identity/decorators/roles.decorator.js';
-import { hashPassword } from '../src/services/password.crypto.js';
-import { REFRESH_COOKIE_NAME } from '../src/services/refresh-token.service.js';
+import { AuthModule } from '../src/modules/auth/auth.module.js';
+import { hashPassword } from '../src/modules/auth/password.crypto.js';
+import { REFRESH_COOKIE_NAME } from '../src/modules/auth/refresh-token.service.js';
 import { Role, UserStatus } from '../src/generated/prisma/enums.js';
 import { RequestIdMiddleware } from '../src/shared/middleware/request-id.middleware.js';
 import { PrismaModule } from '../src/infra/database/prisma.module.js';
@@ -62,6 +63,7 @@ class ProtectedTestController {
     LoggerModule.forRoot({ pinoHttp: { enabled: false } }),
     PrismaModule,
     AuthGuardsModule,
+    AuthModule,
   ],
   controllers: [ProtectedTestController],
 })

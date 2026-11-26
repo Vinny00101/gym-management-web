@@ -20,6 +20,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - [x] Rotas versionadas em `/api/v1/...`, health version-neutral em `/api/health`, cookie de refresh com `Path=/api/v1/auth` e Swagger gerado por factory ([#45](https://github.com/Vinny00101/gym-management-web/issues/45))
 - [x] `AppModule` movido para `app/`, `PrismaModule/PrismaService` para `infra/database/`, configuração HTTP para `infra/http/` e health check para `infra/health/` ([#45](https://github.com/Vinny00101/gym-management-web/issues/45))
 - [x] Regras cross-cutting movidas para `shared/`: guards e decorators de identidade em `shared/identity/`, filtro de erro em `shared/errors/`, eventos de segurança e interceptadores em `shared/security/`, request id e validação em `shared/middleware/` ([#45](https://github.com/Vinny00101/gym-management-web/issues/45))
+- [x] Módulos por domínio em `modules/`: `auth`, `members`, `staff` e `workout-plans`, cada um com controller, service, DTOs, módulo Nest e README; `AuthGuardsModule` não depende mais de módulo de domínio ([#45](https://github.com/Vinny00101/gym-management-web/issues/45))
 
 ### Parte 2: treinos e check-in (planejado)
 
