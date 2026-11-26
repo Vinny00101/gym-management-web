@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,6 +11,7 @@ import { DivisionType } from '../../generated/prisma/enums.js';
 import { OwnershipService } from '../../shared/identity/ownership.service.js';
 import { CreateDivisionPlanDto } from './dto/create-divisionplan.dto.js';
 import { CreateExerciseDto } from './dto/create-exercise.dto.js';
+import { AssignPlanDto } from './dto/assign-plan.dto.js';
 
 export type WorkoutPlanResponse = {
   id: number;
@@ -90,6 +92,57 @@ export class WorkoutPlanService {
         },
       },
       include: { divisions: true },
+    });
+  }
+
+  async assign(
+    user: AuthenticatedUser,
+    planId: number,
+    body: AssignPlanDto,
+  ): Promise<{ planId: number; memberId: number; assignedAt: Date }> {
+    if (!Number.isInteger(body?.memberId) || body.memberId <= 0) {
+      throw new BadRequestException('memberId deve ser um inteiro positivo');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const plan = await tx.workoutPlan.findUnique({
+        where: { id: planId },
+        select: { id: true, trainerId: true, memberId: true },
+      });
+
+      if (!plan) {
+        throw new NotFoundException('Plano de treino não encontrado');
+      }
+
+      if (plan.trainerId !== user.id || plan.memberId !== body.memberId) {
+        throw new ForbiddenException(
+          'Você não pode atribuir este plano a este membro.',
+        );
+      }
+
+      const member = await tx.user.findUnique({
+        where: { id: body.memberId },
+        select: { id: true, instructorId: true, activePlanId: true },
+      });
+
+      if (!member) {
+        throw new NotFoundException('Membro não encontrado');
+      }
+
+      this.ownership.assertCanAccessMember(user, member);
+
+      if (member.activePlanId !== plan.id) {
+        await tx.user.update({
+          where: { id: member.id },
+          data: { activePlanId: plan.id },
+        });
+      }
+
+      return {
+        planId: plan.id,
+        memberId: member.id,
+        assignedAt: new Date(),
+      };
     });
   }
 

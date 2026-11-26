@@ -6,6 +6,7 @@ import {
 import type { CreateWorkoutPlanDto } from './dto/create-workout-plan.dto.js';
 import type { CreateDivisionPlanDto } from './dto/create-divisionplan.dto.js';
 import type { CreateExerciseDto } from './dto/create-exercise.dto.js';
+import type { AssignPlanDto } from './dto/assign-plan.dto.js';
 import { DivisionType, Role } from '../../generated/prisma/enums.js';
 import type { PrismaService } from '../../infra/database/prisma.service.js';
 import { OwnershipService } from '../../shared/identity/ownership.service.js';
@@ -13,8 +14,18 @@ import { WorkoutPlanService } from './workout-plans.service.js';
 
 describe('WorkoutPlanService', () => {
   const trainer = { id: 3, role: Role.trainer };
-  const member = { id: 12, name: 'Ana', instructorId: 3 };
-  const otherMember = { id: 13, name: 'Bruno', instructorId: 9 };
+  const member = {
+    id: 12,
+    name: 'Ana',
+    instructorId: 3,
+    activePlanId: null as number | null,
+  };
+  const otherMember = {
+    id: 13,
+    name: 'Bruno',
+    instructorId: 9,
+    activePlanId: null as number | null,
+  };
 
   const prisma = {
     user: {
@@ -35,6 +46,9 @@ describe('WorkoutPlanService', () => {
       count: vi.fn(),
       create: vi.fn(),
     },
+    $transaction: vi.fn(async (callback: (tx: any) => unknown) =>
+      callback(prisma),
+    ),
   };
 
   const ownership = new OwnershipService();
@@ -63,6 +77,8 @@ describe('WorkoutPlanService', () => {
     prisma.user.findUnique.mockResolvedValue(member);
     prisma.workoutPlan.findUnique.mockResolvedValue({
       id: 100,
+      trainerId: trainer.id,
+      memberId: member.id,
       member,
     });
     prisma.workoutDivision.count.mockResolvedValue(1);
@@ -364,5 +380,94 @@ describe('WorkoutPlanService', () => {
 
     expect(prisma.workoutDivision.findUnique).not.toHaveBeenCalled();
     expect(prisma.exercise.create).not.toHaveBeenCalled();
+  });
+
+  it('atribui o plano ao membro em uma transação', async () => {
+    const body: AssignPlanDto = { memberId: member.id };
+
+    const result = await service.assign(trainer, 100, body);
+
+    expect(prisma.$transaction).toHaveBeenCalledOnce();
+    expect(assertOwnership).toHaveBeenCalledWith(trainer, member);
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: member.id },
+      data: { activePlanId: 100 },
+    });
+    expect(result).toMatchObject({ planId: 100, memberId: member.id });
+    expect(result.assignedAt).toBeInstanceOf(Date);
+  });
+
+  it('nega a atribuição de plano pertencente a outro instrutor', async () => {
+    prisma.workoutPlan.findUnique.mockResolvedValue({
+      id: 100,
+      trainerId: 9,
+      memberId: member.id,
+    });
+
+    await expect(
+      service.assign(trainer, 100, { memberId: member.id }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('nega a atribuição quando o memberId não pertence ao plano', async () => {
+    await expect(
+      service.assign(trainer, 100, { memberId: otherMember.id }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('nega a atribuição quando o membro não está associado ao instrutor', async () => {
+    prisma.user.findUnique.mockResolvedValue(otherMember);
+
+    await expect(
+      service.assign(trainer, 100, { memberId: member.id }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('retorna 404 quando o membro do plano não existe', async () => {
+    prisma.user.findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.assign(trainer, 100, { memberId: member.id }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('não escreve novamente quando o plano já está atribuído', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      ...member,
+      activePlanId: 100,
+    });
+
+    await service.assign(trainer, 100, { memberId: member.id });
+
+    expect(prisma.$transaction).toHaveBeenCalledOnce();
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('retorna 404 para plano inexistente', async () => {
+    prisma.workoutPlan.findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.assign(trainer, 999, { memberId: member.id }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('rejeita memberId que não seja inteiro positivo', async () => {
+    await expect(
+      service.assign(trainer, 100, { memberId: 0 }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 });

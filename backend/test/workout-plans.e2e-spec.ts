@@ -53,7 +53,17 @@ describe('Workout plans (e2e)', () => {
   let app: INestApplication<App>;
   let jwt: JwtService;
 
-  const users = new Map([
+  const users = new Map<
+    number,
+    {
+      id: number;
+      name: string;
+      role: Role;
+      status: UserStatus;
+      instructorId: number | null;
+      activePlanId: number | null;
+    }
+  >([
     [
       1,
       {
@@ -62,6 +72,7 @@ describe('Workout plans (e2e)', () => {
         role: Role.admin,
         status: UserStatus.active,
         instructorId: null,
+        activePlanId: null,
       },
     ],
     [
@@ -72,6 +83,7 @@ describe('Workout plans (e2e)', () => {
         role: Role.trainer,
         status: UserStatus.active,
         instructorId: null,
+        activePlanId: null,
       },
     ],
     [
@@ -82,6 +94,7 @@ describe('Workout plans (e2e)', () => {
         role: Role.trainer,
         status: UserStatus.active,
         instructorId: null,
+        activePlanId: null,
       },
     ],
     [
@@ -92,6 +105,7 @@ describe('Workout plans (e2e)', () => {
         role: Role.member,
         status: UserStatus.active,
         instructorId: 2,
+        activePlanId: null,
       },
     ],
     [
@@ -102,6 +116,7 @@ describe('Workout plans (e2e)', () => {
         role: Role.member,
         status: UserStatus.active,
         instructorId: 3,
+        activePlanId: null,
       },
     ],
   ]);
@@ -130,12 +145,25 @@ describe('Workout plans (e2e)', () => {
           );
         },
       ),
-      update: vi.fn(),
+      update: vi.fn(async ({ where, data }: any) => {
+        const user = users.get(where.id);
+        if (!user) return null;
+        const updated = { ...user, ...data };
+        users.set(where.id, updated);
+        return updated;
+      }),
       updateMany: vi.fn(),
     },
     workoutPlan: {
       findUnique: vi.fn(async ({ where }: any) =>
-        where.id === 100 ? { id: 100, member: users.get(10) } : null,
+        where.id === 100
+          ? {
+              id: 100,
+              trainerId: 2,
+              memberId: 10,
+              member: users.get(10),
+            }
+          : null,
       ),
       create: vi.fn(async ({ data }: any) => ({
         id: 100,
@@ -165,6 +193,7 @@ describe('Workout plans (e2e)', () => {
       count: vi.fn(async () => 2),
       create: vi.fn(async ({ data }: any) => ({ id: 201, ...data })),
     },
+    $transaction: vi.fn(),
     $connect: vi.fn(),
     $disconnect: vi.fn(),
   };
@@ -179,6 +208,10 @@ describe('Workout plans (e2e)', () => {
   };
 
   beforeAll(async () => {
+    prismaMock.$transaction.mockImplementation(
+      (callback: (tx: any) => unknown) => callback(prismaMock),
+    );
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [WorkoutPlansTestModule],
     })
@@ -375,6 +408,87 @@ describe('Workout plans (e2e)', () => {
       repetitions: 12,
       order: 3,
     });
+  });
+
+  it('retorna 200 e atribui o plano ao membro de forma idempotente', async () => {
+    const token = await tokenFor(2, Role.trainer);
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/assign')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ memberId: 10 })
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      planId: 100,
+      memberId: 10,
+    });
+    expect(response.body.assignedAt).toEqual(expect.any(String));
+    expect(prismaMock.user.update).toHaveBeenCalledOnce();
+    expect(prismaMock.$transaction).toHaveBeenCalledOnce();
+
+    await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/assign')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ memberId: 10 })
+      .expect(200);
+
+    expect(prismaMock.user.update).toHaveBeenCalledOnce();
+  });
+
+  it('retorna 400 para memberId inválido', async () => {
+    const token = await tokenFor(2, Role.trainer);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/assign')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ memberId: 1.5 })
+      .expect(400);
+
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('retorna 404 para plano inexistente', async () => {
+    const token = await tokenFor(2, Role.trainer);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/999/assign')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ memberId: 10 })
+      .expect(404);
+  });
+
+  it('retorna 403 para outro instrutor, membro divergente e papel não autorizado', async () => {
+    const otherTrainerToken = await tokenFor(3, Role.trainer);
+    const memberToken = await tokenFor(10, Role.member);
+    const adminToken = await tokenFor(1, Role.admin);
+    const trainerToken = await tokenFor(2, Role.trainer);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/assign')
+      .set('Authorization', `Bearer ${otherTrainerToken}`)
+      .send({ memberId: 10 })
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/assign')
+      .set('Authorization', `Bearer ${trainerToken}`)
+      .send({ memberId: 11 })
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/assign')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ memberId: 10 })
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/workout-plans/100/assign')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ memberId: 10 })
+      .expect(403);
+
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 
   it('retorna 400 para séries ou repetições inválidas', async () => {
