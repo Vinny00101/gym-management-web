@@ -53,14 +53,15 @@ As etapas do [RNF01](docs/requirements.md#requisitos-não-funcionais) correspond
 
 - **Sessão com access e refresh token.** O access token dura 15 minutos (RNF06) e fica só na memória do frontend. O refresh token vai num cookie `httpOnly` e o banco guarda apenas o hash dele; `POST /auth/refresh` emite um novo access token. Como nada fica na memória da instância, a API continua stateless (RNF14).
 - **Mesmo domínio para front e API.** O NGINX serve o Vue em `/` e a API em `/api`, o que evita configuração de CORS. Em desenvolvimento, o proxy do Vite faz o mesmo papel.
+- **Rotas versionadas.** O prefixo global é `/api` e o versionamento URI usa `v1` como padrão, então os endpoints ficam em `/api/v1/...`. O health check é version-neutral (`/api/health`) e o Swagger continua em `/api/docs`.
 - **Tipos compartilhados.** Os tipos do frontend são gerados a partir do Swagger da API com `openapi-typescript`.
 - **Primeiro administrador por seed.** Como só um admin cadastra outro admin (RF02), o primeiro é criado por `prisma db seed`, com credenciais lidas de variáveis de ambiente.
 - **Um check-in por dia garantido no banco.** O RD03 é imposto por uma restrição única em `(memberId, data do check-in)`, e não só no código, porque com duas instâncias da API duas requisições simultâneas passariam pela checagem.
 - **Fuso horário.** Datas são gravadas em UTC e os cálculos por dia e por hora (RD03, RD12, RF15, RF17) usam `America/Sao_Paulo`.
 - **Configuração validada na inicialização.** `@nestjs/config` valida as variáveis de ambiente; a API não sobe sem `JWT_SECRET`, `DATABASE_URL` e as demais obrigatórias.
-- **Guards globais.** `ThrottlerGuard`, `JwtAuthGuard` e `RolesGuard` executam nessa ordem; rotas públicas (health, Swagger, `/auth/*`) são marcadas com `@Public()` e o usuário autenticado chega ao controller por `@CurrentUser()`. O padrão de posse do recurso dos services está em [docs/ownership-pattern.md](docs/ownership-pattern.md).
+- **Guards globais.** `ThrottlerGuard`, `JwtAuthGuard` e `RolesGuard` executam nessa ordem; rotas públicas (health, Swagger, `/api/v1/auth/*`) são marcadas com `@Public()` e o usuário autenticado chega ao controller por `@CurrentUser()`. O padrão de posse do recurso dos services está em [docs/ownership-pattern.md](docs/ownership-pattern.md).
 - **Eventos de segurança.** Falhas de login e acessos negados viram eventos no log com e-mail tentado (quando aplicável), IP e request id — nunca com a senha.
-- **Health check.** `GET /health` (`@nestjs/terminus`) é usado pelo NGINX e pelo Docker para saber se cada instância está ativa.
+- **Health check.** `GET /api/health` (`@nestjs/terminus`) é usado pelo NGINX e pelo Docker para saber se cada instância está ativa.
 - **Repositório único.** API e frontend ficam no mesmo repositório (`gym-management-web`), o que simplifica o Docker Compose e o CI:
 
   ```
@@ -143,7 +144,7 @@ npm install
 npm run start:dev      # API em http://localhost:3000
 ```
 
-A documentação interativa da API fica em `http://localhost:3000/api/docs`. O endpoint público `GET /health` verifica a conexão com o banco e responde com status 503 quando ele está indisponível.
+A documentação interativa da API fica em `http://localhost:3000/api/docs`. O endpoint público `GET /api/health` verifica a conexão com o banco e responde com status 503 quando ele está indisponível.
 Com o PostgreSQL iniciado e as migrações aplicadas, crie o primeiro administrador:
 
 ```bash

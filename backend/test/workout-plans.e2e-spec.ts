@@ -186,7 +186,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     const response = await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send(validBody)
       .expect(201);
@@ -220,7 +220,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     const response = await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Treino B',
@@ -244,13 +244,13 @@ describe('Workout plans (e2e)', () => {
     const memberToken = await tokenFor(10, Role.member);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${adminToken}`)
       .send(validBody)
       .expect(403);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${memberToken}`)
       .send(validBody)
       .expect(403);
@@ -262,7 +262,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...validBody, memberId: 11 })
       .expect(403);
@@ -274,7 +274,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     const response = await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...validBody, divisions: [] })
       .expect(400);
@@ -290,7 +290,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({
         ...validBody,
@@ -305,7 +305,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...validBody, activePlanId: 999 })
       .expect(400);
@@ -317,7 +317,7 @@ describe('Workout plans (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     await request(app.getHttpServer())
-      .post('/workout-plans')
+      .post('/api/v1/workout-plans')
       .set('Authorization', `Bearer ${token}`)
       .send({ ...validBody, memberId: 999 })
       .expect(404);

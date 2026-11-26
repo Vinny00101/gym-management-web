@@ -115,7 +115,7 @@ describe('Members listing (e2e)', () => {
   it('admin lista todos com filtro e paginacao', async () => {
     const token = await tokenFor(1, Role.admin);
     const response = await request(app.getHttpServer())
-      .get('/members?status=active&page=1&limit=10')
+      .get('/api/v1/members?status=active&page=1&limit=10')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
@@ -127,7 +127,7 @@ describe('Members listing (e2e)', () => {
   it('instrutor lista somente membros associados', async () => {
     const token = await tokenFor(2, Role.trainer);
     const response = await request(app.getHttpServer())
-      .get('/members')
+      .get('/api/v1/members')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
@@ -138,7 +138,7 @@ describe('Members listing (e2e)', () => {
   it('membro recebe 403 na listagem', async () => {
     const token = await tokenFor(3, Role.member);
     await request(app.getHttpServer())
-      .get('/members')
+      .get('/api/v1/members')
       .set('Authorization', `Bearer ${token}`)
       .expect(403);
   });
@@ -146,7 +146,7 @@ describe('Members listing (e2e)', () => {
   it('instrutor recebe 404 ao buscar membro nao associado', async () => {
     const token = await tokenFor(2, Role.trainer);
     await request(app.getHttpServer())
-      .get('/members/4')
+      .get('/api/v1/members/4')
       .set('Authorization', `Bearer ${token}`)
       .expect(404);
   });
@@ -154,7 +154,7 @@ describe('Members listing (e2e)', () => {
   it('limite acima de 100 recebe 400', async () => {
     const token = await tokenFor(1, Role.admin);
     await request(app.getHttpServer())
-      .get('/members?limit=101')
+      .get('/api/v1/members?limit=101')
       .set('Authorization', `Bearer ${token}`)
       .expect(400);
   });

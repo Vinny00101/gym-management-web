@@ -92,7 +92,7 @@ describe('RefreshTokenService', () => {
         httpOnly: true,
         secure: false,
         sameSite: 'strict',
-        path: '/auth',
+        path: '/api/v1/auth',
         maxAge: 604_800_000,
       }),
     );
@@ -177,7 +177,7 @@ describe('RefreshTokenService', () => {
       expect.objectContaining({
         httpOnly: true,
         sameSite: 'strict',
-        path: '/auth',
+        path: '/api/v1/auth',
       }),
     );
     expect(clearCookie.mock.calls[0][1]).not.toHaveProperty('maxAge');

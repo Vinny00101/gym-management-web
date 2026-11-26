@@ -1,4 +1,4 @@
-import type { INestApplication } from '@nestjs/common';
+import { VersioningType, type INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { ApiExceptionFilter } from '../filters/api-exception.filter.js';
 import { configureHttp } from '../http/configure-http.js';
@@ -16,6 +16,8 @@ import { configureValidation } from '../validation/configure-validation.js';
  * e shutdown hooks) continuam no bootstrap.
  */
 export function setupApp(app: INestApplication): void {
+  app.setGlobalPrefix('api');
+  app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
   app.use(cookieParser());
   configureHttp(app);
   configureValidation(app);

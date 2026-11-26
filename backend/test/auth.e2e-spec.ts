@@ -153,7 +153,7 @@ describe('Auth (e2e)', () => {
 
   async function login(password = 'Senha@123') {
     const response = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/v1/auth/login')
       .send({ email: user.email, password });
     return response;
   }
@@ -176,13 +176,13 @@ describe('Auth (e2e)', () => {
     expect(cookie).toContain(`${REFRESH_COOKIE_NAME}=`);
     expect(cookie).toContain('HttpOnly');
     expect(cookie).toContain('SameSite=Strict');
-    expect(cookie).toContain('Path=/auth');
+    expect(cookie).toContain('Path=/api/v1/auth');
     expect(cookie).not.toContain('Secure');
   });
 
   it('retorna 401 com a mesma mensagem para e-mail inexistente e senha errada', async () => {
     const unknownEmail = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/api/v1/auth/login')
       .send({ email: 'nobody@example.com', password: 'Senha@123' });
     const wrongPassword = await login('senha-errada');
 
@@ -207,12 +207,12 @@ describe('Auth (e2e)', () => {
   });
 
   it('exige token nas rotas sem @Public() e libera as marcadas', async () => {
-    await request(app.getHttpServer()).get('/protected/me').expect(401);
-    await request(app.getHttpServer()).get('/protected/public').expect(200);
+    await request(app.getHttpServer()).get('/api/v1/protected/me').expect(401);
+    await request(app.getHttpServer()).get('/api/v1/protected/public').expect(200);
 
     const { body } = await login();
     const me = await request(app.getHttpServer())
-      .get('/protected/me')
+      .get('/api/v1/protected/me')
       .set('Authorization', `Bearer ${body.accessToken}`)
       .expect(200);
 
@@ -223,7 +223,7 @@ describe('Auth (e2e)', () => {
     const { body } = await login();
 
     const response = await request(app.getHttpServer())
-      .get('/protected/admin')
+      .get('/api/v1/protected/admin')
       .set('Authorization', `Bearer ${body.accessToken}`);
 
     expect(response.status).toBe(403);
@@ -235,7 +235,7 @@ describe('Auth (e2e)', () => {
     const cookie = headers['set-cookie'][0];
 
     const refreshed = await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/api/v1/auth/refresh')
       .set('Cookie', cookie)
       .expect(200);
 
@@ -246,7 +246,7 @@ describe('Auth (e2e)', () => {
     expect(storedTokens.size).toBe(2);
 
     await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/api/v1/auth/refresh')
       .set('Cookie', cookie)
       .expect(401);
   });
@@ -256,13 +256,13 @@ describe('Auth (e2e)', () => {
     const cookie = headers['set-cookie'][0];
 
     await request(app.getHttpServer())
-      .post('/auth/logout')
+      .post('/api/v1/auth/logout')
       .set('Cookie', cookie)
       .expect(204);
 
     expect([...storedTokens.values()].every((token) => token.revokedAt !== null)).toBe(true);
     const cleared = await request(app.getHttpServer())
-      .post('/auth/refresh')
+      .post('/api/v1/auth/refresh')
       .set('Cookie', cookie)
       .expect(401);
     expect(cleared.body.code).toBe('UNAUTHORIZED');

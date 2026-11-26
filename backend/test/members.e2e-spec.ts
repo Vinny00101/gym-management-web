@@ -146,7 +146,7 @@ describe('Members (e2e)', () => {
   it('permite que admin cadastre membro ativo sem expor senha', async () => {
     const token = await tokenFor(1, Role.admin);
     const response = await request(app.getHttpServer())
-      .post('/members')
+      .post('/api/v1/members')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Ana Souza',
@@ -175,7 +175,7 @@ describe('Members (e2e)', () => {
     const token = await tokenFor(1, Role.admin);
 
     await request(app.getHttpServer())
-      .post('/members')
+      .post('/api/v1/members')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Outro Admin',
@@ -189,7 +189,7 @@ describe('Members (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     await request(app.getHttpServer())
-      .post('/members')
+      .post('/api/v1/members')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Novo Membro',

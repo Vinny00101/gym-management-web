@@ -127,7 +127,7 @@ describe('Trainer association and profile (e2e)', () => {
   it('admin associa instrutor ao membro', async () => {
     const token = await tokenFor(1, Role.admin);
     const response = await request(app.getHttpServer())
-      .put('/members/3/trainer')
+      .put('/api/v1/members/3/trainer')
       .set('Authorization', `Bearer ${token}`)
       .send({ trainerId: 2 })
       .expect(200);
@@ -142,7 +142,7 @@ describe('Trainer association and profile (e2e)', () => {
   it('id que nao pertence a instrutor retorna 422', async () => {
     const token = await tokenFor(1, Role.admin);
     await request(app.getHttpServer())
-      .put('/members/3/trainer')
+      .put('/api/v1/members/3/trainer')
       .set('Authorization', `Bearer ${token}`)
       .send({ trainerId: 1 })
       .expect(422);
@@ -151,7 +151,7 @@ describe('Trainer association and profile (e2e)', () => {
   it('membro acessa proprio perfil com instrutor responsavel', async () => {
     const token = await tokenFor(3, Role.member);
     const response = await request(app.getHttpServer())
-      .get('/me')
+      .get('/api/v1/me')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
@@ -163,7 +163,7 @@ describe('Trainer association and profile (e2e)', () => {
   it('instrutor nao acessa /me', async () => {
     const token = await tokenFor(2, Role.trainer);
     await request(app.getHttpServer())
-      .get('/me')
+      .get('/api/v1/me')
       .set('Authorization', `Bearer ${token}`)
       .expect(403);
   });
@@ -171,7 +171,7 @@ describe('Trainer association and profile (e2e)', () => {
   it('membro inexistente retorna 404 ao associar instrutor', async () => {
     const token = await tokenFor(1, Role.admin);
     await request(app.getHttpServer())
-      .put('/members/999/trainer')
+      .put('/api/v1/members/999/trainer')
       .set('Authorization', `Bearer ${token}`)
       .send({ trainerId: 2 })
       .expect(404);
