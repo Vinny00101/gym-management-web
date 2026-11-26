@@ -33,7 +33,7 @@ Além das regras de negócio, o projeto foca em requisitos de qualidade: pipelin
 
 O backend usa **ESM**: imports relativos terminam em `.js` (`import { PasswordService } from './services/password.service.js'`), `__dirname` não existe (use `import.meta.dirname`) e os mocks dos testes usam `vi.fn()`, não `jest.fn()`.
 
-A estrutura de `backend/src` é organizada por tipo de responsabilidade: controllers em `controllers/`, regras de negócio em `services/`, e recursos reutilizados pela aplicação em `common/` (`decorators/`, `dto/`, `guards/`). Filtros, interceptadores, middlewares e validação ficam em `filters/`, `http/`, `middleware/` e `validation/`.
+Atualmente `backend/src` é organizado por tipo de responsabilidade: controllers em `controllers/`, regras de negócio em `services/` e recursos compartilhados em `common/` (`decorators/`, `dto/`, `guards/`). A refatoração aprovada ([issue #45](https://github.com/Vinny00101/gym-management-web/issues/45)) migra para **módulos por domínio**, com infraestrutura em `infra/`, regras cross-cutting em `shared/` e rotas versionadas em `/api/v1`. O diagnóstico, a estrutura alvo e o plano em PRs estão em [docs/architecture.md](docs/architecture.md).
 
 ### Pipeline de requisição (RNF01)
 
@@ -161,6 +161,8 @@ O seed usa as variáveis `ADMIN_NAME`, `ADMIN_EMAIL` e `ADMIN_PASSWORD` do `.env
 | `npm run start:prod` | Roda a versão compilada |
 
 ## Documentação
+
+A arquitetura do backend e o plano de refatoração estão em [docs/architecture.md](docs/architecture.md).
 
 Os requisitos completos estão em [docs/requirements.md](docs/requirements.md):
 
