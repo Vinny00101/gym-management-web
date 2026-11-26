@@ -14,6 +14,7 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
@@ -23,6 +24,7 @@ import type { AuthenticatedUser } from '../../shared/identity/auth.types.js';
 import { CurrentUser } from '../../shared/identity/decorators/current-user.decorator.js';
 import { CreateDivisionPlanDto } from './dto/create-divisionplan.dto.js';
 import { CreateExerciseDto } from './dto/create-exercise.dto.js';
+import { AssignPlanDto } from './dto/assign-plan.dto.js';
 
 @ApiTags('workout-plans')
 @Controller('workout-plans')
@@ -39,6 +41,22 @@ export class WorkoutPlanController {
     @Body() body: CreateWorkoutPlanDto,
   ) {
     return this.workoutPlanService.create(user, body);
+  }
+
+  @Post(':planId/assign')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Role.trainer)
+  @ApiParam({ name: 'planId', type: Number })
+  @ApiOkResponse({ description: 'Plano atribuído ao membro.' })
+  @ApiBadRequestResponse({ description: 'Dados da atribuição inválidos.' })
+  @ApiForbiddenResponse({ description: 'Acesso negado ao plano ou membro.' })
+  @ApiNotFoundResponse({ description: 'Plano ou membro não encontrado.' })
+  assign(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('planId', ParseIntPipe) planId: number,
+    @Body() body: AssignPlanDto,
+  ) {
+    return this.workoutPlanService.assign(user, planId, body);
   }
 
   @Post(':planId/divisions')
