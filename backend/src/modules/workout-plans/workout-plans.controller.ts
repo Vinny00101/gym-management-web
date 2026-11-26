@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Patch,
   Param,
   ParseIntPipe,
   Post,
@@ -25,6 +26,7 @@ import { CurrentUser } from '../../shared/identity/decorators/current-user.decor
 import { CreateDivisionPlanDto } from './dto/create-divisionplan.dto.js';
 import { CreateExerciseDto } from './dto/create-exercise.dto.js';
 import { AssignPlanDto } from './dto/assign-plan.dto.js';
+import { UpdateWorkoutPlanDto } from './dto/update-workout-plan.dto.js';
 
 @ApiTags('workout-plans')
 @Controller('workout-plans')
@@ -57,6 +59,23 @@ export class WorkoutPlanController {
     @Body() body: AssignPlanDto,
   ) {
     return this.workoutPlanService.assign(user, planId, body);
+  }
+
+  @Patch(':planId')
+  @Roles(Role.trainer)
+  @ApiParam({ name: 'planId', type: Number })
+  @ApiOkResponse({ description: 'Plano de treino atualizado.' })
+  @ApiBadRequestResponse({ description: 'Dados do plano inválidos.' })
+  @ApiForbiddenResponse({ description: 'Acesso negado ao plano.' })
+  @ApiNotFoundResponse({
+    description: 'Plano, divisão ou exercício não encontrado.',
+  })
+  update(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('planId', ParseIntPipe) planId: number,
+    @Body() body: UpdateWorkoutPlanDto,
+  ) {
+    return this.workoutPlanService.update(user, planId, body);
   }
 
   @Post(':planId/divisions')
