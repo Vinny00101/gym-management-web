@@ -125,8 +125,8 @@ A issue [#45](https://github.com/Vinny00101/gym-management-web/issues/45) é o p
 
 | Item | PR | Conteúdo | Status |
 | --- | --- | --- | --- |
-| T0 | docs | Este documento, README e CHANGELOG | neste PR |
-| T1 | `refactor(app)` | `setupApp()` compartilhado por `main.ts` e e2e | pendente |
+| T0 | docs | Este documento, README e CHANGELOG | concluído (PR #46) |
+| T1 | `refactor(app)` | `setupApp()` compartilhado por `main.ts` e e2e | concluído neste PR |
 | T2 | `feat(api)!` | `/api/v1`, cookie, Swagger, health, e2e — única mudança incompatível | pendente |
 | T3 | `refactor(infra)` | Prisma/config/logging/http para `infra/`; CacheModule Redis | pendente |
 | T4 | `refactor(shared)` | Guards, decorators, filtro, eventos e `OwnershipService` | pendente |

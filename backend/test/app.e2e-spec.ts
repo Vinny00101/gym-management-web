@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
+import { setupApp } from './../src/app/setup-app.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 
 describe('App (e2e)', () => {
@@ -27,6 +28,7 @@ describe('App (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    setupApp(app);
     await app.init();
   });
 

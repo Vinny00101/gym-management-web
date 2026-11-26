@@ -10,16 +10,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
+import { setupApp } from '../src/app/setup-app.js';
 import { AuthGuardsModule } from '../src/auth-guards.module.js';
 import { WorkoutPlanController } from '../src/controllers/workout-plans.controller.js';
 import { DivisionType, Role, UserStatus } from '../src/generated/prisma/enums.js';
-import { ApiExceptionFilter } from '../src/filters/api-exception.filter.js';
 import { RequestIdMiddleware } from '../src/middleware/request-id.middleware.js';
 import { PrismaModule } from '../src/prisma/prisma.module.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { OwnershipService } from '../src/services/ownership.service.js';
 import { WorkoutPlanService } from '../src/services/workout-plans.service.js';
-import { configureValidation } from '../src/validation/configure-validation.js';
 
 @Module({
   imports: [
@@ -170,8 +169,7 @@ describe('Workout plans (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    configureValidation(app);
-    app.useGlobalFilters(new ApiExceptionFilter());
+    setupApp(app);
     await app.init();
     jwt = app.get(JwtService);
   });
