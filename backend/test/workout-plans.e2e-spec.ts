@@ -62,6 +62,7 @@ describe('Workout plans (e2e)', () => {
       status: UserStatus;
       instructorId: number | null;
       activePlanId: number | null;
+      activePlanAssignedAt: Date | null;
     }
   >([
     [
@@ -73,6 +74,7 @@ describe('Workout plans (e2e)', () => {
         status: UserStatus.active,
         instructorId: null,
         activePlanId: null,
+        activePlanAssignedAt: null,
       },
     ],
     [
@@ -84,6 +86,7 @@ describe('Workout plans (e2e)', () => {
         status: UserStatus.active,
         instructorId: null,
         activePlanId: null,
+        activePlanAssignedAt: null,
       },
     ],
     [
@@ -95,6 +98,7 @@ describe('Workout plans (e2e)', () => {
         status: UserStatus.active,
         instructorId: null,
         activePlanId: null,
+        activePlanAssignedAt: null,
       },
     ],
     [
@@ -106,6 +110,7 @@ describe('Workout plans (e2e)', () => {
         status: UserStatus.active,
         instructorId: 2,
         activePlanId: null,
+        activePlanAssignedAt: null,
       },
     ],
     [
@@ -117,6 +122,7 @@ describe('Workout plans (e2e)', () => {
         status: UserStatus.active,
         instructorId: 3,
         activePlanId: null,
+        activePlanAssignedAt: null,
       },
     ],
   ]);
@@ -163,6 +169,28 @@ describe('Workout plans (e2e)', () => {
         }) => {
           const user = where.id === undefined ? undefined : users.get(where.id);
           if (!user) return null;
+          if (!select) return user;
+          return Object.fromEntries(
+            Object.entries(select)
+              .filter(([, included]) => included)
+              .map(([key]) => [
+                key,
+                (user as unknown as Record<string, unknown>)[key],
+              ])
+              .filter(([, value]) => value !== undefined),
+          );
+        },
+      ),
+      findFirst: vi.fn(
+        async ({
+          where,
+          select,
+        }: {
+          where: { id: number; role: Role };
+          select?: Record<string, boolean>;
+        }) => {
+          const user = users.get(where.id);
+          if (!user || user.role !== where.role) return null;
           if (!select) return user;
           return Object.fromEntries(
             Object.entries(select)
@@ -316,7 +344,13 @@ describe('Workout plans (e2e)', () => {
     persistedPlan.objective = 'Hipertrofia';
     persistedPlan.divisions = initialDivisions();
     const member = users.get(10);
-    if (member) users.set(10, { ...member, activePlanId: null });
+    if (member) {
+      users.set(10, {
+        ...member,
+        activePlanId: null,
+        activePlanAssignedAt: null,
+      });
+    }
   });
 
   async function tokenFor(id: number, role: Role): Promise<string> {
@@ -642,13 +676,95 @@ describe('Workout plans (e2e)', () => {
     expect(prismaMock.user.update).toHaveBeenCalledOnce();
     expect(prismaMock.$transaction).toHaveBeenCalledOnce();
 
-    await request(app.getHttpServer())
+    const repeatedAssignment = await request(app.getHttpServer())
       .post('/api/v1/workout-plans/100/assign')
       .set('Authorization', `Bearer ${token}`)
       .send({ memberId: 10 })
       .expect(200);
 
+    expect(repeatedAssignment.body.assignedAt).toBe(response.body.assignedAt);
     expect(prismaMock.user.update).toHaveBeenCalledOnce();
+  });
+
+  it('consulta o plano atual para o membro e seu instrutor', async () => {
+    const trainerToken = await tokenFor(2, Role.trainer);
+    const memberToken = await tokenFor(10, Role.member);
+    const assignedAt = new Date('2026-11-26T12:00:00.000Z');
+    users.set(10, {
+      ...users.get(10)!,
+      activePlanId: 100,
+      activePlanAssignedAt: assignedAt,
+    });
+
+    const memberResponse = await request(app.getHttpServer())
+      .get('/api/v1/members/10/workout-plan')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .expect(200);
+
+    expect(memberResponse.body).toEqual({
+      id: 100,
+      name: 'Treino A',
+      objective: 'Hipertrofia',
+      assignedAt: assignedAt.toISOString(),
+      divisions: [
+        {
+          id: 101,
+          name: 'Peitoral',
+          type: DivisionType.day,
+          exercises: [
+            {
+              id: 201,
+              name: 'Supino reto',
+              sets: 3,
+              repetitions: 10,
+            },
+          ],
+        },
+      ],
+    });
+    expect(memberResponse.text).not.toContain('passwordHash');
+
+    await request(app.getHttpServer())
+      .get('/api/v1/members/10/workout-plan')
+      .set('Authorization', `Bearer ${trainerToken}`)
+      .expect(200);
+  });
+
+  it('nega acesso sem posse e retorna 404 para membro sem plano', async () => {
+    const trainerToken = await tokenFor(2, Role.trainer);
+    const otherTrainerToken = await tokenFor(3, Role.trainer);
+    const memberToken = await tokenFor(10, Role.member);
+    const adminToken = await tokenFor(1, Role.admin);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/members/11/workout-plan')
+      .set('Authorization', `Bearer ${trainerToken}`)
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/members/10/workout-plan')
+      .set('Authorization', `Bearer ${otherTrainerToken}`)
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/members/11/workout-plan')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/members/10/workout-plan')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/members/999/workout-plan')
+      .set('Authorization', `Bearer ${trainerToken}`)
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/members/10/workout-plan')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .expect(404);
   });
 
   it('retorna 400 para memberId inválido', async () => {

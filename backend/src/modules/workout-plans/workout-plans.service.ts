@@ -7,7 +7,7 @@ import {
 import { PrismaService } from '../../infra/database/prisma.service.js';
 import { CreateWorkoutPlanDto } from './dto/create-workout-plan.dto.js';
 import type { AuthenticatedUser } from '../../shared/identity/auth.types.js';
-import { DivisionType } from '../../generated/prisma/enums.js';
+import { DivisionType, Role } from '../../generated/prisma/enums.js';
 import { OwnershipService } from '../../shared/identity/ownership.service.js';
 import { CreateDivisionPlanDto } from './dto/create-divisionplan.dto.js';
 import { CreateExerciseDto } from './dto/create-exercise.dto.js';
@@ -100,7 +100,7 @@ export class WorkoutPlanService {
     user: AuthenticatedUser,
     planId: number,
     body: AssignPlanDto,
-  ): Promise<{ planId: number; memberId: number; assignedAt: Date }> {
+  ): Promise<{ planId: number; memberId: number; assignedAt: Date | null }> {
     if (!Number.isInteger(body?.memberId) || body.memberId <= 0) {
       throw new BadRequestException('memberId deve ser um inteiro positivo');
     }
@@ -123,7 +123,12 @@ export class WorkoutPlanService {
 
       const member = await tx.user.findUnique({
         where: { id: body.memberId },
-        select: { id: true, instructorId: true, activePlanId: true },
+        select: {
+          id: true,
+          instructorId: true,
+          activePlanId: true,
+          activePlanAssignedAt: true,
+        },
       });
 
       if (!member) {
@@ -132,19 +137,77 @@ export class WorkoutPlanService {
 
       this.ownership.assertCanAccessMember(user, member);
 
+      let assignedAt = member.activePlanAssignedAt;
       if (member.activePlanId !== plan.id) {
+        assignedAt = new Date();
         await tx.user.update({
           where: { id: member.id },
-          data: { activePlanId: plan.id },
+          data: { activePlanId: plan.id, activePlanAssignedAt: assignedAt },
         });
       }
 
       return {
         planId: plan.id,
         memberId: member.id,
-        assignedAt: new Date(),
+        assignedAt,
       };
     });
+  }
+
+  async findCurrent(user: AuthenticatedUser, memberId: number) {
+    const member = await this.prisma.user.findFirst({
+      where: { id: memberId, role: Role.member },
+      select: {
+        id: true,
+        instructorId: true,
+        activePlanId: true,
+        activePlanAssignedAt: true,
+      },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Member not found');
+    }
+
+    this.ownership.assertCanAccessMember(user, member);
+
+    if (member.activePlanId === null) {
+      throw new NotFoundException('No active workout plan');
+    }
+
+    const plan = await this.prisma.workoutPlan.findUnique({
+      where: { id: member.activePlanId },
+      include: {
+        divisions: {
+          orderBy: { order: 'asc' },
+          include: {
+            exercises: { orderBy: { order: 'asc' } },
+          },
+        },
+      },
+    });
+
+    if (!plan) {
+      throw new NotFoundException('No active workout plan');
+    }
+
+    return {
+      id: plan.id,
+      name: plan.name,
+      objective: plan.objective,
+      assignedAt: member.activePlanAssignedAt,
+      divisions: plan.divisions.map((division) => ({
+        id: division.id,
+        name: division.name,
+        type: division.type,
+        exercises: division.exercises.map((exercise) => ({
+          id: exercise.id,
+          name: exercise.name,
+          sets: exercise.sets,
+          repetitions: exercise.repetitions,
+        })),
+      })),
+    };
   }
 
   async update(
