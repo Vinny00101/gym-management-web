@@ -201,7 +201,7 @@ describe('Auth (e2e)', () => {
       expect(response.status).toBe(401);
       expect(response.body).toMatchObject({
         code: 'UNAUTHORIZED',
-        message: 'Invalid email or password',
+        message: 'E-mail ou senha inválidos',
       });
       expect(response.body.requestId).toBeDefined();
       expect(JSON.stringify(response.body)).not.toContain('Senha@123');
@@ -214,7 +214,7 @@ describe('Auth (e2e)', () => {
     const response = await login();
 
     expect(response.status).toBe(401);
-    expect(response.body.message).toBe('Invalid email or password');
+    expect(response.body.message).toBe('E-mail ou senha inválidos');
   });
 
   it('exige token nas rotas sem @Public() e libera as marcadas', async () => {
