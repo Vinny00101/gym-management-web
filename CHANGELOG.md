@@ -6,6 +6,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Refatoração da arquitetura (planejada)
+
+#### Adicionado
+
+- [ ] Documentação da arquitetura alvo, da task [#45](https://github.com/Vinny00101/gym-management-web/issues/45) e do plano de migração em PRs ([docs/architecture.md](docs/architecture.md))
+
 ### Parte 2: treinos e check-in (planejado)
 
 #### Adicionado
