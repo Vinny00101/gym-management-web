@@ -117,7 +117,7 @@ describe('Members update (e2e)', () => {
   it('admin atualiza dados pessoais', async () => {
     const token = await tokenFor(1, Role.admin);
     const response = await request(app.getHttpServer())
-      .patch('/members/3')
+      .patch('/api/v1/members/3')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Ana Maria', email: 'ana.nova@academia.com' })
       .expect(200);
@@ -133,7 +133,7 @@ describe('Members update (e2e)', () => {
   it('admin atualiza situacao valida', async () => {
     const token = await tokenFor(1, Role.admin);
     const response = await request(app.getHttpServer())
-      .patch('/members/3/status')
+      .patch('/api/v1/members/3/status')
       .set('Authorization', `Bearer ${token}`)
       .send({ status: UserStatus.suspended })
       .expect(200);
@@ -144,7 +144,7 @@ describe('Members update (e2e)', () => {
   it('rejeita situacao invalida', async () => {
     const token = await tokenFor(1, Role.admin);
     await request(app.getHttpServer())
-      .patch('/members/3/status')
+      .patch('/api/v1/members/3/status')
       .set('Authorization', `Bearer ${token}`)
       .send({ status: 'blocked' })
       .expect(400);
@@ -153,7 +153,7 @@ describe('Members update (e2e)', () => {
   it('membro inexistente retorna 404', async () => {
     const token = await tokenFor(1, Role.admin);
     await request(app.getHttpServer())
-      .patch('/members/999/status')
+      .patch('/api/v1/members/999/status')
       .set('Authorization', `Bearer ${token}`)
       .send({ status: UserStatus.inactive })
       .expect(404);
@@ -162,7 +162,7 @@ describe('Members update (e2e)', () => {
   it('instrutor recebe 403', async () => {
     const token = await tokenFor(2, Role.trainer);
     await request(app.getHttpServer())
-      .patch('/members/3/status')
+      .patch('/api/v1/members/3/status')
       .set('Authorization', `Bearer ${token}`)
       .send({ status: UserStatus.inactive })
       .expect(403);

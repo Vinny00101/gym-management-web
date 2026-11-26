@@ -146,7 +146,7 @@ describe('Staff (e2e)', () => {
   it('permite que admin cadastre trainer e oculta o hash da senha', async () => {
     const token = await tokenFor(1, Role.admin);
     const response = await request(app.getHttpServer())
-      .post('/staff')
+      .post('/api/v1/staff')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Maria Silva',
@@ -177,7 +177,7 @@ describe('Staff (e2e)', () => {
     const token = await tokenFor(1, Role.admin);
 
     await request(app.getHttpServer())
-      .post('/staff')
+      .post('/api/v1/staff')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Admin 2',
@@ -192,7 +192,7 @@ describe('Staff (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     await request(app.getHttpServer())
-      .post('/staff')
+      .post('/api/v1/staff')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Novo Admin',
@@ -207,7 +207,7 @@ describe('Staff (e2e)', () => {
     const token = await tokenFor(1, Role.admin);
 
     await request(app.getHttpServer())
-      .post('/staff')
+      .post('/api/v1/staff')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Novo Membro',

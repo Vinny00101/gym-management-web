@@ -6,7 +6,7 @@ import { UserStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 export const REFRESH_COOKIE_NAME = 'refresh_token';
-const REFRESH_COOKIE_PATH = '/auth';
+const REFRESH_COOKIE_PATH = '/api/v1/auth';
 
 const DURATION_UNITS = {
   s: 1_000,

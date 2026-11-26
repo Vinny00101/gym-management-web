@@ -11,6 +11,8 @@ export function configureHttp(app: INestApplication): void {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, swaggerDocument);
+  // A factory adia a geração do documento até a primeira requisição, quando o
+  // versionamento e o prefixo global já foram aplicados pelo setupApp().
+  const documentFactory = () => SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, documentFactory);
 }

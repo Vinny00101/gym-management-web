@@ -32,22 +32,33 @@ describe('App (e2e)', () => {
     await app.init();
   });
 
-  it('/health (GET)', () => {
-    return request(app.getHttpServer()).get('/health').expect(200);
+  it('/api/health (GET)', () => {
+    return request(app.getHttpServer()).get('/api/health').expect(200);
   });
 
   it('returns a generated X-Request-Id header', async () => {
-    const response = await request(app.getHttpServer()).get('/health');
+    const response = await request(app.getHttpServer()).get('/api/health');
 
     expect(response.headers['x-request-id']).toBeDefined();
   });
 
   it('preserves an incoming X-Request-Id header', async () => {
     const response = await request(app.getHttpServer())
-      .get('/health')
+      .get('/api/health')
       .set('X-Request-Id', 'test-request-id');
 
     expect(response.headers['x-request-id']).toBe('test-request-id');
+  });
+
+  it('documenta apenas as rotas versionadas no Swagger', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/docs-json')
+      .expect(200);
+
+    expect(response.body.paths).toHaveProperty('/api/v1/auth/login');
+    expect(response.body.paths).toHaveProperty('/api/health');
+    expect(response.body.paths).not.toHaveProperty('/auth/login');
+    expect(response.body.paths).not.toHaveProperty('/health');
   });
 
   afterEach(async () => {
