@@ -10,7 +10,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 #### Adicionado
 
-- [ ] Documentação da arquitetura alvo, da task [#45](https://github.com/Vinny00101/gym-management-web/issues/45) e do plano de migração em PRs ([docs/architecture.md](docs/architecture.md))
+- [x] Documentação da arquitetura alvo, da task [#45](https://github.com/Vinny00101/gym-management-web/issues/45) e do plano de migração em PRs ([docs/architecture.md](docs/architecture.md))
+
+#### Alterado
+
+- [x] Pipeline HTTP centralizada em `setupApp()` e usada por `main.ts` e por todos os testes e2e, sem mudança de comportamento
 
 ### Parte 2: treinos e check-in (planejado)
 

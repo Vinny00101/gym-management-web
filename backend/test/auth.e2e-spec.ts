@@ -8,10 +8,10 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import cookieParser from 'cookie-parser';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
+import { setupApp } from '../src/app/setup-app.js';
 import { AuthGuardsModule } from '../src/auth-guards.module.js';
 import type { AuthenticatedUser } from '../src/auth.types.js';
 import { CurrentUser } from '../src/common/decorators/current-user.decorator.js';
@@ -20,14 +20,9 @@ import { Roles } from '../src/common/decorators/roles.decorator.js';
 import { hashPassword } from '../src/services/password.crypto.js';
 import { REFRESH_COOKIE_NAME } from '../src/services/refresh-token.service.js';
 import { Role, UserStatus } from '../src/generated/prisma/enums.js';
-import { ApiExceptionFilter } from '../src/filters/api-exception.filter.js';
-import { SensitiveDataInterceptor } from '../src/http/sensitive-data.interceptor.js';
 import { RequestIdMiddleware } from '../src/middleware/request-id.middleware.js';
-import { SecurityEventInterceptor } from '../src/security/security-event.interceptor.js';
-import { SecurityEventService } from '../src/security/security-event.service.js';
 import { PrismaModule } from '../src/prisma/prisma.module.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
-import { configureValidation } from '../src/validation/configure-validation.js';
 
 @Controller('protected')
 class ProtectedTestController {
@@ -152,13 +147,7 @@ describe('Auth (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    app.use(cookieParser());
-    configureValidation(app);
-    app.useGlobalInterceptors(
-      new SecurityEventInterceptor(app.get(SecurityEventService)),
-      new SensitiveDataInterceptor(),
-    );
-    app.useGlobalFilters(new ApiExceptionFilter());
+    setupApp(app);
     await app.init();
   });
 
