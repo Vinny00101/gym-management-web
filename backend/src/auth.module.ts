@@ -13,6 +13,8 @@ import { MembersController } from './controllers/members.controller.js';
 import { MembersService } from './services/members.service.js';
 import { StaffController } from './controllers/staff.controller.js';
 import { StaffService } from './services/staff.service.js';
+import { WorkoutPlanController } from './controllers/workout-plans.controller.js';
+import { WorkoutPlanService } from './services/workout-plans.service.js';
 
 @Module({
   imports: [
@@ -28,7 +30,12 @@ import { StaffService } from './services/staff.service.js';
       }),
     }),
   ],
-  controllers: [AuthController, MembersController, StaffController],
+  controllers: [
+    AuthController, 
+    MembersController, 
+    StaffController,
+    WorkoutPlanController,
+  ],
   providers: [
     SecurityEventService,
     PasswordService,
@@ -39,6 +46,7 @@ import { StaffService } from './services/staff.service.js';
     StaffService,
     JwtAuthGuard,
     RolesGuard,
+    WorkoutPlanService,
   ],
   exports: [
     JwtModule,
