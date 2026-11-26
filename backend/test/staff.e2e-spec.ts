@@ -10,16 +10,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
-import { AuthGuardsModule } from '../src/auth-guards.module.js';
+import { setupApp } from '../src/app/setup-app.js';
+import { AuthGuardsModule } from '../src/shared/identity/auth-guards.module.js';
+import { StaffModule } from '../src/modules/staff/staff.module.js';
 import { Role, UserStatus } from '../src/generated/prisma/enums.js';
-import { ApiExceptionFilter } from '../src/filters/api-exception.filter.js';
-import { SensitiveDataInterceptor } from '../src/http/sensitive-data.interceptor.js';
-import { RequestIdMiddleware } from '../src/middleware/request-id.middleware.js';
-import { PrismaModule } from '../src/prisma/prisma.module.js';
-import { PrismaService } from '../src/prisma/prisma.service.js';
-import { SecurityEventInterceptor } from '../src/security/security-event.interceptor.js';
-import { SecurityEventService } from '../src/security/security-event.service.js';
-import { configureValidation } from '../src/validation/configure-validation.js';
+import { RequestIdMiddleware } from '../src/shared/middleware/request-id.middleware.js';
+import { PrismaModule } from '../src/infra/database/prisma.module.js';
+import { PrismaService } from '../src/infra/database/prisma.service.js';
 
 @Module({
   imports: [
@@ -39,6 +36,7 @@ import { configureValidation } from '../src/validation/configure-validation.js';
     LoggerModule.forRoot({ pinoHttp: { enabled: false } }),
     PrismaModule,
     AuthGuardsModule,
+    StaffModule,
   ],
 })
 class StaffTestModule implements NestModule {
@@ -134,12 +132,7 @@ describe('Staff (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    configureValidation(app);
-    app.useGlobalInterceptors(
-      new SecurityEventInterceptor(app.get(SecurityEventService)),
-      new SensitiveDataInterceptor(),
-    );
-    app.useGlobalFilters(new ApiExceptionFilter());
+    setupApp(app);
     await app.init();
     jwt = app.get(JwtService);
   });
@@ -155,7 +148,7 @@ describe('Staff (e2e)', () => {
   it('permite que admin cadastre trainer e oculta o hash da senha', async () => {
     const token = await tokenFor(1, Role.admin);
     const response = await request(app.getHttpServer())
-      .post('/staff')
+      .post('/api/v1/staff')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Maria Silva',
@@ -186,7 +179,7 @@ describe('Staff (e2e)', () => {
     const token = await tokenFor(1, Role.admin);
 
     await request(app.getHttpServer())
-      .post('/staff')
+      .post('/api/v1/staff')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Admin 2',
@@ -201,7 +194,7 @@ describe('Staff (e2e)', () => {
     const token = await tokenFor(2, Role.trainer);
 
     await request(app.getHttpServer())
-      .post('/staff')
+      .post('/api/v1/staff')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Novo Admin',
@@ -216,7 +209,7 @@ describe('Staff (e2e)', () => {
     const token = await tokenFor(1, Role.admin);
 
     await request(app.getHttpServer())
-      .post('/staff')
+      .post('/api/v1/staff')
       .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Novo Membro',

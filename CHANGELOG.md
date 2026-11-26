@@ -6,11 +6,21 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
-### Refatoração da arquitetura (planejada)
+### Refatoração da arquitetura (em andamento)
 
 #### Adicionado
 
-- [ ] Documentação da arquitetura alvo, da task [#45](https://github.com/Vinny00101/gym-management-web/issues/45) e do plano de migração em PRs ([docs/architecture.md](docs/architecture.md))
+- [x] Documentação da arquitetura alvo, da task [#45](https://github.com/Vinny00101/gym-management-web/issues/45) e do plano de migração em PRs ([docs/architecture.md](docs/architecture.md))
+- [x] Módulos de infraestrutura em `infra/`: config, database, cache, logging, observability, http e health ([RNF11](docs/requirements.md#requisitos-não-funcionais))
+- [x] Cache Redis via `@nestjs/cache-manager` com `CacheModule.registerAsync`, listener de `error`, fallback em memória nos testes, validação de `REDIS_URL`/`CACHE_TTL` e helpers de chaves por `userId`/`role`
+
+#### Alterado
+
+- [x] Pipeline HTTP centralizada em `setupApp()` e usada por `main.ts` e por todos os testes e2e, sem mudança de comportamento
+- [x] Rotas versionadas em `/api/v1/...`, health version-neutral em `/api/health`, cookie de refresh com `Path=/api/v1/auth` e Swagger gerado por factory ([#45](https://github.com/Vinny00101/gym-management-web/issues/45))
+- [x] `AppModule` movido para `app/`, `PrismaModule/PrismaService` para `infra/database/`, configuração HTTP para `infra/http/` e health check para `infra/health/` ([#45](https://github.com/Vinny00101/gym-management-web/issues/45))
+- [x] Regras cross-cutting movidas para `shared/`: guards e decorators de identidade em `shared/identity/`, filtro de erro em `shared/errors/`, eventos de segurança e interceptadores em `shared/security/`, request id e validação em `shared/middleware/` ([#45](https://github.com/Vinny00101/gym-management-web/issues/45))
+- [x] Módulos por domínio em `modules/`: `auth`, `members`, `staff` e `workout-plans`, cada um com controller, service, DTOs, módulo Nest e README; `AuthGuardsModule` não depende mais de módulo de domínio ([#45](https://github.com/Vinny00101/gym-management-web/issues/45))
 
 ### Parte 2: treinos e check-in (planejado)
 
@@ -35,7 +45,7 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 - [x] Prisma configurado com PostgreSQL ([RNF09](docs/requirements.md#requisitos-não-funcionais))
 - [x] Migrações iniciais: tabela de usuários (admin, trainer, member) com e-mail único, situação do membro e instrutor responsável ([RNF04](docs/requirements.md#requisitos-não-funcionais), RD01, RD05, RD10)
 - [x] Seed do primeiro administrador com credenciais vindas de variáveis de ambiente (RF02), usando o mesmo `PasswordService` da API
-- [x] `helmet` e `GET /health` com `@nestjs/terminus`
+- [x] `helmet` e `GET /api/health` com `@nestjs/terminus`
 - [x] Swagger em `/api/docs` com `@nestjs/swagger`, documentando os endpoints desta etapa (RNF16)
 
 **Pipeline de middlewares** ([RNF01](docs/requirements.md#requisitos-não-funcionais))
@@ -49,9 +59,9 @@ Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova 
 
 **Autenticação**
 
-- [x] `POST /auth/login`: login com e-mail e senha, retornando access token de 15 minutos e refresh token em cookie `httpOnly` ([RF01](docs/requirements.md#requisitos-funcionais), RNF06)
-- [x] `POST /auth/refresh`: emite novo access token e rotaciona o refresh token, cujo hash SHA-256 fica no banco (RNF14)
-- [x] `POST /auth/logout`: revoga o refresh token e limpa o cookie
+- [x] `POST /api/v1/auth/login`: login com e-mail e senha, retornando access token de 15 minutos e refresh token em cookie `httpOnly` ([RF01](docs/requirements.md#requisitos-funcionais), RNF06)
+- [x] `POST /api/v1/auth/refresh`: emite novo access token e rotaciona o refresh token, cujo hash SHA-256 fica no banco (RNF14)
+- [x] `POST /api/v1/auth/logout`: revoga o refresh token e limpa o cookie
 - [x] `PasswordService` com `hash()` e `verify()` usando `argon2`, usado pelo login e pelo seed (RNF05)
 - [x] Limite de 5 tentativas de login por minuto por IP com `@nestjs/throttler` (429 com `TOO_MANY_REQUESTS`)
 - [x] Registro de falhas de login e acessos negados (401/403) como eventos de segurança com e-mail, IP e request id, sem senha (RNF10)

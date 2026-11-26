@@ -33,7 +33,7 @@ Além das regras de negócio, o projeto foca em requisitos de qualidade: pipelin
 
 O backend usa **ESM**: imports relativos terminam em `.js` (`import { PasswordService } from './services/password.service.js'`), `__dirname` não existe (use `import.meta.dirname`) e os mocks dos testes usam `vi.fn()`, não `jest.fn()`.
 
-Atualmente `backend/src` é organizado por tipo de responsabilidade: controllers em `controllers/`, regras de negócio em `services/` e recursos compartilhados em `common/` (`decorators/`, `dto/`, `guards/`). A refatoração aprovada ([issue #45](https://github.com/Vinny00101/gym-management-web/issues/45)) migra para **módulos por domínio**, com infraestrutura em `infra/`, regras cross-cutting em `shared/` e rotas versionadas em `/api/v1`. O diagnóstico, a estrutura alvo e o plano em PRs estão em [docs/architecture.md](docs/architecture.md).
+O `backend/src` é organizado por **módulos de domínio** em `modules/` (`auth`, `members`, `staff`, `workout-plans`), cada um com controller, service, DTOs e README. A infraestrutura vive em `infra/` e as regras cross-cutting em `shared/`. As rotas são versionadas em `/api/v1`. Essa estrutura vem da refatoração aprovada na [issue #45](https://github.com/Vinny00101/gym-management-web/issues/45); o diagnóstico, a estrutura alvo e o plano em PRs estão em [docs/architecture.md](docs/architecture.md).
 
 ### Pipeline de requisição (RNF01)
 
@@ -53,14 +53,15 @@ As etapas do [RNF01](docs/requirements.md#requisitos-não-funcionais) correspond
 
 - **Sessão com access e refresh token.** O access token dura 15 minutos (RNF06) e fica só na memória do frontend. O refresh token vai num cookie `httpOnly` e o banco guarda apenas o hash dele; `POST /auth/refresh` emite um novo access token. Como nada fica na memória da instância, a API continua stateless (RNF14).
 - **Mesmo domínio para front e API.** O NGINX serve o Vue em `/` e a API em `/api`, o que evita configuração de CORS. Em desenvolvimento, o proxy do Vite faz o mesmo papel.
+- **Rotas versionadas.** O prefixo global é `/api` e o versionamento URI usa `v1` como padrão, então os endpoints ficam em `/api/v1/...`. O health check é version-neutral (`/api/health`) e o Swagger continua em `/api/docs`.
 - **Tipos compartilhados.** Os tipos do frontend são gerados a partir do Swagger da API com `openapi-typescript`.
 - **Primeiro administrador por seed.** Como só um admin cadastra outro admin (RF02), o primeiro é criado por `prisma db seed`, com credenciais lidas de variáveis de ambiente.
 - **Um check-in por dia garantido no banco.** O RD03 é imposto por uma restrição única em `(memberId, data do check-in)`, e não só no código, porque com duas instâncias da API duas requisições simultâneas passariam pela checagem.
 - **Fuso horário.** Datas são gravadas em UTC e os cálculos por dia e por hora (RD03, RD12, RF15, RF17) usam `America/Sao_Paulo`.
 - **Configuração validada na inicialização.** `@nestjs/config` valida as variáveis de ambiente; a API não sobe sem `JWT_SECRET`, `DATABASE_URL` e as demais obrigatórias.
-- **Guards globais.** `ThrottlerGuard`, `JwtAuthGuard` e `RolesGuard` executam nessa ordem; rotas públicas (health, Swagger, `/auth/*`) são marcadas com `@Public()` e o usuário autenticado chega ao controller por `@CurrentUser()`. O padrão de posse do recurso dos services está em [docs/ownership-pattern.md](docs/ownership-pattern.md).
+- **Guards globais.** `ThrottlerGuard`, `JwtAuthGuard` e `RolesGuard` executam nessa ordem; rotas públicas (health, Swagger, `/api/v1/auth/*`) são marcadas com `@Public()` e o usuário autenticado chega ao controller por `@CurrentUser()`. O padrão de posse do recurso dos services está em [docs/ownership-pattern.md](docs/ownership-pattern.md).
 - **Eventos de segurança.** Falhas de login e acessos negados viram eventos no log com e-mail tentado (quando aplicável), IP e request id — nunca com a senha.
-- **Health check.** `GET /health` (`@nestjs/terminus`) é usado pelo NGINX e pelo Docker para saber se cada instância está ativa.
+- **Health check.** `GET /api/health` (`@nestjs/terminus`) é usado pelo NGINX e pelo Docker para saber se cada instância está ativa.
 - **Repositório único.** API e frontend ficam no mesmo repositório (`gym-management-web`), o que simplifica o Docker Compose e o CI:
 
   ```
@@ -113,7 +114,7 @@ cp .env.example .env
 
 Ajuste os valores conforme necessário. Em desenvolvimento, as credenciais do banco no `.env` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT`, `DATABASE_URL`) devem permanecer consistentes entre si.
 
-Defina também `ADMIN_NAME`, `ADMIN_EMAIL` e `ADMIN_PASSWORD` para criar o primeiro administrador. Use uma senha forte e não compartilhe nem registre essas credenciais.
+Defina também `ADMIN_NAME`, `ADMIN_EMAIL` e `ADMIN_PASSWORD` para criar o primeiro administrador. Use uma senha forte e não compartilhe nem registre essas credenciais. `REDIS_URL` é obrigatório fora de testes; `CACHE_TTL` define o TTL do cache em milissegundos (padrão: `300000`).
 
 ### 2. Infraestrutura local (PostgreSQL e Redis)
 
@@ -143,7 +144,7 @@ npm install
 npm run start:dev      # API em http://localhost:3000
 ```
 
-A documentação interativa da API fica em `http://localhost:3000/api/docs`. O endpoint público `GET /health` verifica a conexão com o banco e responde com status 503 quando ele está indisponível.
+A documentação interativa da API fica em `http://localhost:3000/api/docs`. O endpoint público `GET /api/health` verifica a conexão com o banco e responde com status 503 quando ele está indisponível.
 Com o PostgreSQL iniciado e as migrações aplicadas, crie o primeiro administrador:
 
 ```bash
