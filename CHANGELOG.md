@@ -6,6 +6,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Parte 2: treinos e check-in (planejado)
+
+#### Adicionado
+
+- [x] Migração com entidades de treinos e check-in: `WorkoutPlan`, `WorkoutDivision`, `Exercise` e `CheckIn`, enum `DivisionType`, plano atual por membro via `User.activePlanId` e restrição de um check-in por dia ([RD02](docs/requirements.md#requisitos-de-domínio), RD03, RD07, RD08, [RNF04](docs/requirements.md#requisitos-não-funcionais), RNF12)
+
 ### Parte 1: base da API, autenticação e gestão de membros (planejado)
 
 Marque cada item com `[x]` quando ele for implementado. Ao fechar a etapa, mova esta seção para `## [0.1.0] - AAAA-MM-DD`.

@@ -19,6 +19,11 @@ enum UserStatus {
   suspended
 }
 
+enum DivisionType {
+  day
+  muscleGroup
+}
+
 model User {
   id           Int        @id @default(autoincrement())
   name         String
@@ -34,6 +39,14 @@ model User {
 
   // RNF14: só o hash do refresh token é persistido; nada fica em memória.
   refreshTokens RefreshToken[]
+
+  // RD07: o plano atual é uma referência única; planos antigos ficam persistidos.
+  activePlanId Int?         @unique
+  activePlan   WorkoutPlan? @relation("UserActivePlan", fields: [activePlanId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  trainerPlans WorkoutPlan[] @relation("TrainerPlans")
+  memberPlans  WorkoutPlan[] @relation("MemberPlans")
+  checkIns     CheckIn[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -51,4 +64,60 @@ model RefreshToken {
   createdAt DateTime  @default(now())
 
   @@index([userId])
+}
+
+model WorkoutPlan {
+  id        Int               @id @default(autoincrement())
+  name      String
+  objective String
+  trainerId Int
+  trainer   User              @relation("TrainerPlans", fields: [trainerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  memberId  Int
+  member    User              @relation("MemberPlans", fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  activeFor User[]            @relation("UserActivePlan")
+  divisions WorkoutDivision[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([trainerId])
+  @@index([memberId])
+}
+
+model WorkoutDivision {
+  id        Int          @id @default(autoincrement())
+  planId    Int
+  plan      WorkoutPlan  @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  name      String
+  type      DivisionType
+  order     Int
+  exercises Exercise[]
+
+  @@index([planId])
+}
+
+model Exercise {
+  id          Int             @id @default(autoincrement())
+  divisionId  Int
+  division    WorkoutDivision @relation(fields: [divisionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  name        String
+  sets        Int
+  repetitions Int
+  notes       String?
+  order       Int
+
+  @@index([divisionId])
+}
+
+model CheckIn {
+  id          Int      @id @default(autoincrement())
+  memberId    Int
+  member      User     @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  checkedInAt DateTime @default(now())
+
+  // RD03: data local calculada em America/Sao_Paulo; a unicidade vale por dia.
+  localDate DateTime @db.Date
+
+  @@unique([memberId, localDate])
+  @@index([memberId, checkedInAt])
+  @@index([checkedInAt])
 }
