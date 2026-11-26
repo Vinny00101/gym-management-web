@@ -2,7 +2,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import { UserStatus } from '../generated/prisma/enums.js';
-import type { PrismaService } from '../prisma/prisma.service.js';
+import type { PrismaService } from '../infra/database/prisma.service.js';
 import {
   parseDurationToMs,
   REFRESH_COOKIE_NAME,

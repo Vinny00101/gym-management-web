@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes } from 'node:crypto';
 import type { Response } from 'express';
 import { UserStatus } from '../generated/prisma/enums.js';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../infra/database/prisma.service.js';
 
 export const REFRESH_COOKIE_NAME = 'refresh_token';
 const REFRESH_COOKIE_PATH = '/api/v1/auth';

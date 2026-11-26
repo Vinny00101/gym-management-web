@@ -10,7 +10,7 @@ Este documento registra a decisão aprovada na [issue #45](https://github.com/Vi
 - `backend/src` é organizado por camada técnica (`controllers/`, `services/`, `common/dto/`, `common/guards/`). Uma única feature fica espalhada por várias pastas, e não há fronteira explícita entre domínios.
 - As rotas não têm prefixo nem versão: `/auth/login`, `/members`, `/workout-plans`. O README e o proxy NGINX, porém, já colocam a API em `/api`.
 - `setupApp()` não existe: `main.ts` aplica helmet, Swagger, validação, interceptadores e filtros, enquanto os testes e2e montam a aplicação por conta própria. Qualquer configuração nova precisa ser repetida em dois lugares.
-- O cache Redis aparece no README e no `docker-compose.dev.yml`, mas `@nestjs/cache-manager`, `cache-manager` e `@keyv/redis` não estão instalados; `REDIS_URL` e `CACHE_TTL` também não são validados na inicialização.
+- No diagnóstico inicial, o cache Redis aparecia no README e no `docker-compose.dev.yml`, mas `@nestjs/cache-manager`, `cache-manager` e `@keyv/redis` não estavam instalados; `REDIS_URL` e `CACHE_TTL` também não eram validados. O T3 resolve esse ponto.
 - `REFRESH_COOKIE_PATH = '/auth'` está acoplado à rota atual. Com `/api/v1/auth/refresh`, o navegador deixaria de enviar o cookie e o refresh quebraria.
 
 ## Decisão
@@ -113,10 +113,10 @@ Pontos que precisam mudar junto com o prefixo:
 
 ## Cache (RNF11)
 
-- Instalar `@nestjs/cache-manager`, `cache-manager`, `@keyv/redis`, `keyv` e `cacheable` (store em memória como fallback).
-- `CacheModule.registerAsync({ isGlobal: true, imports: [ConfigModule], inject: [ConfigService] })` em `infra/cache/`, lendo `REDIS_URL` e `CACHE_TTL` (padrão: 5 minutos).
-- **Sempre** registrar listener de `error` no store Redis: sem ele, uma queda de conexão derruba o processo.
-- Cache explícito nos services de leitura (treino atual do membro e indicadores do admin), com `userId`/`role` na chave. Não usar `CacheInterceptor` global: ele chaveia por URL e pode devolver dados de outro usuário (RNF07/RD11), além de não funcionar em rotas com `@Res()` como as de auth.
+- [x] Instalar `@nestjs/cache-manager`, `cache-manager`, `@keyv/redis`, `keyv` e `cacheable` (store em memória como fallback).
+- [x] `CacheModule.registerAsync({ isGlobal: true, imports: [AppConfigModule], inject: [ConfigService] })` em `infra/cache/`, lendo `REDIS_URL` e `CACHE_TTL` (padrão: 300.000 ms = 5 minutos). Em `NODE_ENV=test`, usa somente memória — os e2e não exigem Redis.
+- [x] **Sempre** registrar listener de `error` no store Redis: sem ele, uma queda de conexão derruba o processo. `REDIS_URL` é obrigatório fora de testes e validado como URI `redis://`/`rediss://`.
+- [x] Helpers de chaves em `infra/cache/cache-keys.ts` já incluem `userId`/`role` e prefixo de invalidação. O uso nos services de leitura (treino atual do membro e indicadores do admin) entra com os módulos de domínio (T5/Issues #36–#42). Não usar `CacheInterceptor` global: ele chaveia por URL e pode devolver dados de outro usuário (RNF07/RD11), além de não funcionar em rotas com `@Res()` como as de auth.
 - Invalidar as chaves na edição e na atribuição de plano (RF11/RF10).
 
 ## Task de refatoração e PRs
@@ -128,7 +128,7 @@ A issue [#45](https://github.com/Vinny00101/gym-management-web/issues/45) é o p
 | T0 | docs | Este documento, README e CHANGELOG | concluído (PR #46) |
 | T1 | `refactor(app)` | `setupApp()` compartilhado por `main.ts` e e2e | concluído neste PR |
 | T2 | `feat(api)!` | `/api/v1`, cookie, Swagger, health, e2e — única mudança incompatível | concluído neste PR |
-| T3 | `refactor(infra)` | Prisma/config/logging/http para `infra/`; CacheModule Redis | pendente |
+| T3 | `refactor(infra)` | Prisma/config/logging/http para `infra/`; CacheModule Redis | concluído neste PR |
 | T4 | `refactor(shared)` | Guards, decorators, filtro, eventos e `OwnershipService` | pendente |
 | T5 | `refactor(modules)` | Dividir `AuthModule` em auth/members/staff/workout-plans | pendente |
 

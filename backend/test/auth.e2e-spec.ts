@@ -21,8 +21,8 @@ import { hashPassword } from '../src/services/password.crypto.js';
 import { REFRESH_COOKIE_NAME } from '../src/services/refresh-token.service.js';
 import { Role, UserStatus } from '../src/generated/prisma/enums.js';
 import { RequestIdMiddleware } from '../src/middleware/request-id.middleware.js';
-import { PrismaModule } from '../src/prisma/prisma.module.js';
-import { PrismaService } from '../src/prisma/prisma.service.js';
+import { PrismaModule } from '../src/infra/database/prisma.module.js';
+import { PrismaService } from '../src/infra/database/prisma.service.js';
 
 @Controller('protected')
 class ProtectedTestController {

@@ -1,7 +1,7 @@
 import { VersioningType, type INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { ApiExceptionFilter } from '../filters/api-exception.filter.js';
-import { configureHttp } from '../http/configure-http.js';
+import { configureHttp } from '../infra/http/configure-http.js';
 import { SensitiveDataInterceptor } from '../http/sensitive-data.interceptor.js';
 import { SecurityEventInterceptor } from '../security/security-event.interceptor.js';
 import { SecurityEventService } from '../security/security-event.service.js';

@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { Request, Response } from 'express';
 import { Role, UserStatus } from '../generated/prisma/enums.js';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../infra/database/prisma.service.js';
 import { SecurityEventService } from '../security/security-event.service.js';
 import type { LoginResult } from '../auth.types.js';
 import { DUMMY_PASSWORD_HASH } from './password.crypto.js';

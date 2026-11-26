@@ -3,8 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TerminusModule } from '@nestjs/terminus';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
-import { HealthController } from '../controllers/health.controller.js';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../database/prisma.service.js';
+import { HealthController } from '../health/health.controller.js';
 import { configureHttp } from './configure-http.js';
 
 describe('HTTP configuration', () => {

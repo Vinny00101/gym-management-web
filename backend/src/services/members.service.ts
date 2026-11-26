@@ -11,7 +11,7 @@ import type { ListMembersDto } from '../common/dto/list-members.dto.js';
 import type { UpdateMemberStatusDto } from '../common/dto/update-member-status.dto.js';
 import type { UpdateMemberDto } from '../common/dto/update-member.dto.js';
 import { Role, UserStatus } from '../generated/prisma/enums.js';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../infra/database/prisma.service.js';
 import { PasswordService } from './password.service.js';
 
 export type MemberResponse = {

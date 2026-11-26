@@ -15,8 +15,8 @@ import { AuthGuardsModule } from '../src/auth-guards.module.js';
 import { WorkoutPlanController } from '../src/controllers/workout-plans.controller.js';
 import { DivisionType, Role, UserStatus } from '../src/generated/prisma/enums.js';
 import { RequestIdMiddleware } from '../src/middleware/request-id.middleware.js';
-import { PrismaModule } from '../src/prisma/prisma.module.js';
-import { PrismaService } from '../src/prisma/prisma.service.js';
+import { PrismaModule } from '../src/infra/database/prisma.module.js';
+import { PrismaService } from '../src/infra/database/prisma.service.js';
 import { OwnershipService } from '../src/services/ownership.service.js';
 import { WorkoutPlanService } from '../src/services/workout-plans.service.js';
 
