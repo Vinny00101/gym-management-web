@@ -121,6 +121,36 @@ describe('Workout plans (e2e)', () => {
     ],
   ]);
 
+  const persistedPlan: any = {
+    id: 100,
+    trainerId: 2,
+    memberId: 10,
+    name: 'Treino A',
+    objective: 'Hipertrofia',
+    divisions: [],
+  };
+  const initialDivisions = () => [
+    {
+      id: 101,
+      planId: 100,
+      name: 'Peitoral',
+      type: DivisionType.day,
+      order: 1,
+      exercises: [
+        {
+          id: 201,
+          divisionId: 101,
+          name: 'Supino reto',
+          sets: 3,
+          repetitions: 10,
+          notes: null,
+          order: 1,
+        },
+      ],
+    },
+  ];
+  persistedPlan.divisions = initialDivisions();
+
   const prismaMock = {
     user: {
       findUnique: vi.fn(
@@ -158,13 +188,15 @@ describe('Workout plans (e2e)', () => {
       findUnique: vi.fn(async ({ where }: any) =>
         where.id === 100
           ? {
-              id: 100,
-              trainerId: 2,
-              memberId: 10,
+              ...persistedPlan,
               member: users.get(10),
             }
           : null,
       ),
+      update: vi.fn(async ({ data }: any) => {
+        Object.assign(persistedPlan, data);
+        return persistedPlan;
+      }),
       create: vi.fn(async ({ data }: any) => ({
         id: 100,
         name: data.name,
@@ -184,14 +216,67 @@ describe('Workout plans (e2e)', () => {
     },
     workoutDivision: {
       count: vi.fn(async () => 1),
-      create: vi.fn(async ({ data }: any) => ({ id: 101, ...data })),
+      create: vi.fn(async ({ data }: any) => {
+        const division = {
+          id: 102,
+          ...data,
+          exercises: [],
+        };
+        persistedPlan.divisions.push(division);
+        return division;
+      }),
+      update: vi.fn(async ({ where, data }: any) => {
+        const division = persistedPlan.divisions.find(
+          (item: any) => item.id === where.id,
+        );
+        Object.assign(division, data);
+        return division;
+      }),
+      deleteMany: vi.fn(async ({ where }: any) => {
+        const before = persistedPlan.divisions.length;
+        if (where.id?.notIn) {
+          persistedPlan.divisions = persistedPlan.divisions.filter(
+            (item: any) => where.id.notIn.includes(item.id),
+          );
+        } else {
+          persistedPlan.divisions = [];
+        }
+        return { count: before - persistedPlan.divisions.length };
+      }),
       findUnique: vi.fn(async ({ where }: any) =>
         where.id === 101 ? { id: 101, planId: 100 } : null,
       ),
     },
     exercise: {
       count: vi.fn(async () => 2),
-      create: vi.fn(async ({ data }: any) => ({ id: 201, ...data })),
+      create: vi.fn(async ({ data }: any) => {
+        const exercise = { id: 202, ...data };
+        persistedPlan.divisions
+          .find((item: any) => item.id === data.divisionId)
+          ?.exercises.push(exercise);
+        return exercise;
+      }),
+      update: vi.fn(async ({ where, data }: any) => {
+        const exercise = persistedPlan.divisions
+          .flatMap((item: any) => item.exercises)
+          .find((item: any) => item.id === where.id);
+        Object.assign(exercise, data);
+        return exercise;
+      }),
+      deleteMany: vi.fn(async ({ where }: any) => {
+        const division = persistedPlan.divisions.find(
+          (item: any) => item.id === where.divisionId,
+        );
+        const before = division.exercises.length;
+        if (where.id?.notIn) {
+          division.exercises = division.exercises.filter((item: any) =>
+            where.id.notIn.includes(item.id),
+          );
+        } else {
+          division.exercises = [];
+        }
+        return { count: before - division.exercises.length };
+      }),
     },
     $transaction: vi.fn(),
     $connect: vi.fn(),
@@ -227,6 +312,11 @@ describe('Workout plans (e2e)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    persistedPlan.name = 'Treino A';
+    persistedPlan.objective = 'Hipertrofia';
+    persistedPlan.divisions = initialDivisions();
+    const member = users.get(10);
+    if (member) users.set(10, { ...member, activePlanId: null });
   });
 
   async function tokenFor(id: number, role: Role): Promise<string> {
@@ -408,6 +498,131 @@ describe('Workout plans (e2e)', () => {
       repetitions: 12,
       order: 3,
     });
+  });
+
+  it('retorna 200 com o plano e exercícios atualizados sem trocar o plano ativo', async () => {
+    const token = await tokenFor(2, Role.trainer);
+    const member = users.get(10);
+    if (member) users.set(10, { ...member, activePlanId: 100 });
+
+    const response = await request(app.getHttpServer())
+      .patch('/api/v1/workout-plans/100')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        name: 'Treino A atualizado',
+        objective: 'Força',
+        divisions: [
+          {
+            id: 101,
+            name: 'Peitoral atualizado',
+            type: DivisionType.day,
+            exercises: [
+              {
+                id: 201,
+                name: 'Supino inclinado',
+                sets: 4,
+                repetitions: 8,
+              },
+            ],
+          },
+        ],
+      })
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      id: 100,
+      name: 'Treino A atualizado',
+      objective: 'Força',
+      divisions: [
+        {
+          id: 101,
+          name: 'Peitoral atualizado',
+          exercises: [
+            {
+              id: 201,
+              name: 'Supino inclinado',
+              sets: 4,
+              repetitions: 8,
+            },
+          ],
+        },
+      ],
+    });
+    expect(users.get(10)?.activePlanId).toBe(100);
+    expect(prismaMock.$transaction).toHaveBeenCalledOnce();
+  });
+
+  it('retorna 400 para lista de divisões vazia ou campo extra', async () => {
+    const token = await tokenFor(2, Role.trainer);
+
+    await request(app.getHttpServer())
+      .patch('/api/v1/workout-plans/100')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ divisions: [] })
+      .expect(400);
+
+    await request(app.getHttpServer())
+      .patch('/api/v1/workout-plans/100')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ unexpected: true })
+      .expect(400);
+
+    expect(prismaMock.workoutPlan.update).not.toHaveBeenCalled();
+    expect(prismaMock.workoutDivision.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('retorna 403 para outro instrutor e 404 para plano inexistente', async () => {
+    const otherTrainerToken = await tokenFor(3, Role.trainer);
+    const trainerToken = await tokenFor(2, Role.trainer);
+
+    await request(app.getHttpServer())
+      .patch('/api/v1/workout-plans/100')
+      .set('Authorization', `Bearer ${otherTrainerToken}`)
+      .send({ name: 'Não autorizado' })
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .patch('/api/v1/workout-plans/999')
+      .set('Authorization', `Bearer ${trainerToken}`)
+      .send({ name: 'Inexistente' })
+      .expect(404);
+
+    expect(prismaMock.workoutPlan.update).not.toHaveBeenCalled();
+  });
+
+  it('retorna 400 para sets inválido e 403 para membro/admin', async () => {
+    const trainerToken = await tokenFor(2, Role.trainer);
+    const memberToken = await tokenFor(10, Role.member);
+    const adminToken = await tokenFor(1, Role.admin);
+
+    await request(app.getHttpServer())
+      .patch('/api/v1/workout-plans/100')
+      .set('Authorization', `Bearer ${trainerToken}`)
+      .send({
+        divisions: [
+          {
+            id: 101,
+            name: 'Peitoral',
+            type: DivisionType.day,
+            exercises: [{ name: 'Supino', sets: 0, repetitions: 10 }],
+          },
+        ],
+      })
+      .expect(400);
+
+    await request(app.getHttpServer())
+      .patch('/api/v1/workout-plans/100')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ name: 'Sem permissão' })
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .patch('/api/v1/workout-plans/100')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Sem permissão' })
+      .expect(403);
+
+    expect(prismaMock.workoutPlan.update).not.toHaveBeenCalled();
   });
 
   it('retorna 200 e atribui o plano ao membro de forma idempotente', async () => {

@@ -12,6 +12,7 @@ import { OwnershipService } from '../../shared/identity/ownership.service.js';
 import { CreateDivisionPlanDto } from './dto/create-divisionplan.dto.js';
 import { CreateExerciseDto } from './dto/create-exercise.dto.js';
 import { AssignPlanDto } from './dto/assign-plan.dto.js';
+import { UpdateWorkoutPlanDto } from './dto/update-workout-plan.dto.js';
 
 export type WorkoutPlanResponse = {
   id: number;
@@ -143,6 +144,239 @@ export class WorkoutPlanService {
         memberId: member.id,
         assignedAt: new Date(),
       };
+    });
+  }
+
+  async update(
+    user: AuthenticatedUser,
+    planId: number,
+    body: UpdateWorkoutPlanDto,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const plan = await tx.workoutPlan.findUnique({
+        where: { id: planId },
+        include: { divisions: { include: { exercises: true } } },
+      });
+
+      if (!plan) {
+        throw new NotFoundException('Plano de treino não encontrado');
+      }
+
+      if (plan.trainerId !== user.id) {
+        throw new ForbiddenException(
+          'Você não pode editar um plano de outro instrutor.',
+        );
+      }
+
+      const errors: string[] = [];
+      if (body.name !== undefined && body.name.trim().length === 0) {
+        errors.push('name não pode ser vazio');
+      }
+      if (
+        body.divisions !== undefined &&
+        (!Array.isArray(body.divisions) || body.divisions.length === 0)
+      ) {
+        errors.push('divisions deve conter pelo menos uma divisão');
+      }
+
+      const existingDivisions = new Map(
+        plan.divisions.map((division) => [division.id, division]),
+      );
+      const seenDivisionIds = new Set<number>();
+      const divisions = Array.isArray(body.divisions) ? body.divisions : [];
+
+      for (const [index, division] of divisions.entries()) {
+        if (typeof division.name !== 'string' || division.name.trim() === '') {
+          errors.push(`divisions[${index}].name não pode ser vazio`);
+        }
+        if (!Object.values(DivisionType).includes(division.type)) {
+          errors.push(`divisions[${index}].type inválido`);
+        }
+        if (
+          division.order !== undefined &&
+          (!Number.isInteger(division.order) || division.order < 0)
+        ) {
+          errors.push(`divisions[${index}].order deve ser não negativo`);
+        }
+        if (division.id !== undefined) {
+          if (!existingDivisions.has(division.id)) {
+            throw new NotFoundException(
+              'Divisão não encontrada neste plano de treino',
+            );
+          }
+          if (seenDivisionIds.has(division.id)) {
+            errors.push(`divisions[${index}].id duplicado`);
+          }
+          seenDivisionIds.add(division.id);
+        }
+
+        const existingDivision =
+          division.id === undefined
+            ? undefined
+            : existingDivisions.get(division.id);
+        const existingExercises = new Map(
+          (existingDivision?.exercises ?? []).map((exercise) => [
+            exercise.id,
+            exercise,
+          ]),
+        );
+        const seenExerciseIds = new Set<number>();
+
+        for (const [exerciseIndex, exercise] of (
+          division.exercises ?? []
+        ).entries()) {
+          if (
+            typeof exercise.name !== 'string' ||
+            exercise.name.trim() === ''
+          ) {
+            errors.push(
+              `divisions[${index}].exercises[${exerciseIndex}].name não pode ser vazio`,
+            );
+          }
+          if (!Number.isInteger(exercise.sets) || exercise.sets < 1) {
+            errors.push(
+              `divisions[${index}].exercises[${exerciseIndex}].sets deve ser maior que zero`,
+            );
+          }
+          if (
+            !Number.isInteger(exercise.repetitions) ||
+            exercise.repetitions < 1
+          ) {
+            errors.push(
+              `divisions[${index}].exercises[${exerciseIndex}].repetitions deve ser maior que zero`,
+            );
+          }
+          if (
+            exercise.order !== undefined &&
+            (!Number.isInteger(exercise.order) || exercise.order < 0)
+          ) {
+            errors.push(
+              `divisions[${index}].exercises[${exerciseIndex}].order deve ser não negativo`,
+            );
+          }
+          if (exercise.id !== undefined) {
+            if (!existingExercises.has(exercise.id)) {
+              throw new NotFoundException(
+                'Exercício não encontrado nesta divisão do plano',
+              );
+            }
+            if (seenExerciseIds.has(exercise.id)) {
+              errors.push(
+                `divisions[${index}].exercises[${exerciseIndex}].id duplicado`,
+              );
+            }
+            seenExerciseIds.add(exercise.id);
+          }
+        }
+      }
+
+      if (errors.length > 0) {
+        throw new BadRequestException(errors);
+      }
+
+      if (body.name !== undefined || body.objective !== undefined) {
+        await tx.workoutPlan.update({
+          where: { id: planId },
+          data: {
+            ...(body.name !== undefined ? { name: body.name.trim() } : {}),
+            ...(body.objective !== undefined
+              ? { objective: body.objective.trim() }
+              : {}),
+          },
+        });
+      }
+
+      if (body.divisions !== undefined) {
+        const retainedDivisionIds = body.divisions
+          .map((division) => division.id)
+          .filter((id): id is number => id !== undefined);
+        await tx.workoutDivision.deleteMany({
+          where: {
+            planId,
+            ...(retainedDivisionIds.length > 0
+              ? { id: { notIn: retainedDivisionIds } }
+              : {}),
+          },
+        });
+
+        for (const [index, division] of body.divisions.entries()) {
+          const savedDivision =
+            division.id === undefined
+              ? await tx.workoutDivision.create({
+                  data: {
+                    planId,
+                    name: division.name.trim(),
+                    type: division.type,
+                    order: division.order ?? index + 1,
+                  },
+                })
+              : await tx.workoutDivision.update({
+                  where: { id: division.id },
+                  data: {
+                    name: division.name.trim(),
+                    type: division.type,
+                    ...(division.order !== undefined
+                      ? { order: division.order }
+                      : {}),
+                  },
+                });
+
+          if (division.exercises === undefined) {
+            continue;
+          }
+
+          const retainedExerciseIds = division.exercises
+            .map((exercise) => exercise.id)
+            .filter((id): id is number => id !== undefined);
+          await tx.exercise.deleteMany({
+            where: {
+              divisionId: savedDivision.id,
+              ...(retainedExerciseIds.length > 0
+                ? { id: { notIn: retainedExerciseIds } }
+                : {}),
+            },
+          });
+
+          for (const [
+            exerciseIndex,
+            exercise,
+          ] of division.exercises.entries()) {
+            const data = {
+              name: exercise.name.trim(),
+              sets: exercise.sets,
+              repetitions: exercise.repetitions,
+              notes: exercise.notes?.trim() || null,
+              ...(exercise.order !== undefined
+                ? { order: exercise.order }
+                : {}),
+            };
+            if (exercise.id === undefined) {
+              await tx.exercise.create({
+                data: {
+                  ...data,
+                  divisionId: savedDivision.id,
+                  order: exercise.order ?? exerciseIndex + 1,
+                },
+              });
+            } else {
+              await tx.exercise.update({
+                where: { id: exercise.id },
+                data,
+              });
+            }
+          }
+        }
+      }
+
+      const updatedPlan = await tx.workoutPlan.findUnique({
+        where: { id: planId },
+        include: { divisions: { include: { exercises: true } } },
+      });
+      if (!updatedPlan) {
+        throw new NotFoundException('Plano de treino não encontrado');
+      }
+
+      return updatedPlan;
     });
   }
 
