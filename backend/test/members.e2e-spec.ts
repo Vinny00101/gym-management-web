@@ -11,9 +11,10 @@ import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { setupApp } from '../src/app/setup-app.js';
-import { AuthGuardsModule } from '../src/auth-guards.module.js';
+import { AuthGuardsModule } from '../src/shared/identity/auth-guards.module.js';
+import { MembersModule } from '../src/modules/members/members.module.js';
 import { Role, UserStatus } from '../src/generated/prisma/enums.js';
-import { RequestIdMiddleware } from '../src/middleware/request-id.middleware.js';
+import { RequestIdMiddleware } from '../src/shared/middleware/request-id.middleware.js';
 import { PrismaModule } from '../src/infra/database/prisma.module.js';
 import { PrismaService } from '../src/infra/database/prisma.service.js';
 
@@ -35,6 +36,7 @@ import { PrismaService } from '../src/infra/database/prisma.service.js';
     LoggerModule.forRoot({ pinoHttp: { enabled: false } }),
     PrismaModule,
     AuthGuardsModule,
+    MembersModule,
   ],
 })
 class MembersTestModule implements NestModule {

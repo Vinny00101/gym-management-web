@@ -129,8 +129,8 @@ A issue [#45](https://github.com/Vinny00101/gym-management-web/issues/45) é o p
 | T1 | `refactor(app)` | `setupApp()` compartilhado por `main.ts` e e2e | concluído neste PR |
 | T2 | `feat(api)!` | `/api/v1`, cookie, Swagger, health, e2e — única mudança incompatível | concluído neste PR |
 | T3 | `refactor(infra)` | Prisma/config/logging/http para `infra/`; CacheModule Redis | concluído neste PR |
-| T4 | `refactor(shared)` | Guards, decorators, filtro, eventos e `OwnershipService` | pendente |
-| T5 | `refactor(modules)` | Dividir `AuthModule` em auth/members/staff/workout-plans | pendente |
+| T4 | `refactor(shared)` | Guards, decorators, filtro, eventos e `OwnershipService` | concluído neste PR |
+| T5 | `refactor(modules)` | Dividir `AuthModule` em auth/members/staff/workout-plans | concluído neste PR |
 
 ## Critérios de aceite
 
