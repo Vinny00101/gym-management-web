@@ -12,9 +12,9 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import type { AuthenticatedUser } from '../auth.types.js';
-import { CurrentUser } from '../common/decorators/current-user.decorator.js';
-import { Roles } from '../common/decorators/roles.decorator.js';
+import type { AuthenticatedUser } from '../shared/identity/auth.types.js';
+import { CurrentUser } from '../shared/identity/decorators/current-user.decorator.js';
+import { Roles } from '../shared/identity/decorators/roles.decorator.js';
 import { AssignTrainerDto } from '../common/dto/assign-trainer.dto.js';
 import { CreateMemberDto } from '../common/dto/create-member.dto.js';
 import { ListMembersDto } from '../common/dto/list-members.dto.js';

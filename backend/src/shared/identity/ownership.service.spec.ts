@@ -1,5 +1,5 @@
 import { ForbiddenException } from '@nestjs/common';
-import { Role } from '../generated/prisma/enums.js';
+import { Role } from '../../generated/prisma/enums.js';
 import { OwnershipService } from './ownership.service.js';
 
 describe('OwnershipService', () => {

@@ -2,8 +2,8 @@ import {
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Role, UserStatus } from '../../generated/prisma/enums.js';
-import type { AuthenticatedRequest } from '../../auth.types.js';
+import { Role, UserStatus } from '../../../generated/prisma/enums.js';
+import type { AuthenticatedRequest } from '../auth.types.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 
 describe('JwtAuthGuard', () => {

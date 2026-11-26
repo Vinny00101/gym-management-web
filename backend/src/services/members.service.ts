@@ -4,7 +4,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import type { AuthenticatedUser } from '../auth.types.js';
+import type { AuthenticatedUser } from '../shared/identity/auth.types.js';
 import type { AssignTrainerDto } from '../common/dto/assign-trainer.dto.js';
 import type { CreateMemberDto } from '../common/dto/create-member.dto.js';
 import type { ListMembersDto } from '../common/dto/list-members.dto.js';

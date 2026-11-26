@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { Prisma } from '../generated/prisma/client.js';
+import { Prisma } from '../../generated/prisma/client.js';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
 import { ApiExceptionFilter } from './api-exception.filter.js';

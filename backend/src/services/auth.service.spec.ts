@@ -2,7 +2,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { Role, UserStatus } from '../generated/prisma/enums.js';
 import type { PrismaService } from '../infra/database/prisma.service.js';
-import type { SecurityEventService } from '../security/security-event.service.js';
+import type { SecurityEventService } from '../shared/security/security-event.service.js';
 import { AuthService } from './auth.service.js';
 import type { PasswordService } from './password.service.js';
 import type { RefreshTokenService } from './refresh-token.service.js';

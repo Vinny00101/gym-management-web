@@ -14,7 +14,7 @@ import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
-import { InputSanitizationMiddleware } from '../middleware/input-sanitization.middleware.js';
+import { InputSanitizationMiddleware } from './input-sanitization.middleware.js';
 import { configureValidation } from './configure-validation.js';
 
 class ExampleDto {

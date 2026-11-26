@@ -1,11 +1,11 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import { Role } from "../generated/prisma/enums.js";
-import { Roles } from "../common/decorators/roles.decorator.js";
+import { Roles } from "../shared/identity/decorators/roles.decorator.js";
 import { ApiCreatedResponse, ApiTags } from "@nestjs/swagger";
 import { CreateWorkoutPlanDto } from "../common/dto/create-workout-plan.dto.js";
 import { WorkoutPlanService } from "../services/workout-plans.service.js";
-import { CurrentUser } from "../common/decorators/current-user.decorator.js";
-import type { AuthenticatedUser } from "../auth.types.js";
+import type { AuthenticatedUser } from "../shared/identity/auth.types.js";
+import { CurrentUser } from "../shared/identity/decorators/current-user.decorator.js";
 
 
 @ApiTags("workout-plans")

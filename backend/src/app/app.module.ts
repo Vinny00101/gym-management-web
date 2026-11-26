@@ -1,13 +1,13 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { AuthGuardsModule } from '../auth-guards.module.js';
+import { AuthGuardsModule } from '../shared/identity/auth-guards.module.js';
 import { CacheModule } from '../infra/cache/cache.module.js';
 import { AppConfigModule } from '../infra/config/config.module.js';
 import { PrismaModule } from '../infra/database/prisma.module.js';
 import { HealthModule } from '../infra/health/health.module.js';
 import { LoggingModule } from '../infra/logging/logging.module.js';
 import { ObservabilityModule } from '../infra/observability/observability.module.js';
-import { InputSanitizationMiddleware } from '../middleware/input-sanitization.middleware.js';
-import { RequestIdMiddleware } from '../middleware/request-id.middleware.js';
+import { InputSanitizationMiddleware } from '../shared/middleware/input-sanitization.middleware.js';
+import { RequestIdMiddleware } from '../shared/middleware/request-id.middleware.js';
 
 /**
  * Composição da aplicação: infraestrutura isolada, guards globais e (no T5)

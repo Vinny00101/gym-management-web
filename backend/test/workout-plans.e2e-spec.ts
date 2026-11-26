@@ -11,13 +11,13 @@ import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { setupApp } from '../src/app/setup-app.js';
-import { AuthGuardsModule } from '../src/auth-guards.module.js';
+import { AuthGuardsModule } from '../src/shared/identity/auth-guards.module.js';
 import { WorkoutPlanController } from '../src/controllers/workout-plans.controller.js';
 import { DivisionType, Role, UserStatus } from '../src/generated/prisma/enums.js';
-import { RequestIdMiddleware } from '../src/middleware/request-id.middleware.js';
+import { RequestIdMiddleware } from '../src/shared/middleware/request-id.middleware.js';
 import { PrismaModule } from '../src/infra/database/prisma.module.js';
 import { PrismaService } from '../src/infra/database/prisma.service.js';
-import { OwnershipService } from '../src/services/ownership.service.js';
+import { OwnershipService } from '../src/shared/identity/ownership.service.js';
 import { WorkoutPlanService } from '../src/services/workout-plans.service.js';
 
 @Module({

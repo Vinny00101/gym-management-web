@@ -1,9 +1,9 @@
 import {BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from '../infra/database/prisma.service.js';
 import { CreateWorkoutPlanDto } from "../common/dto/create-workout-plan.dto.js";
-import type { AuthenticatedUser } from "../auth.types.js";
+import type { AuthenticatedUser } from '../shared/identity/auth.types.js';
 import { DivisionType } from "../generated/prisma/enums.js";
-import { OwnershipService } from "./ownership.service.js";
+import { OwnershipService } from '../shared/identity/ownership.service.js';
 
 
 export type WorkoutPlanResponse = {

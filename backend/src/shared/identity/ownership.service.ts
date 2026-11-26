@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Role } from '../generated/prisma/enums.js';
-import type { AuthenticatedUser } from '../auth.types.js';
+import { Role } from '../../generated/prisma/enums.js';
+import type { AuthenticatedUser } from './auth.types.js';
 
 export interface OwnershipTarget {
   id: number;

@@ -1,5 +1,5 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
-import { sanitizeInput } from '../middleware/input-sanitization.middleware.js';
+import { sanitizeInput } from './input-sanitization.middleware.js';
 
 @Injectable()
 export class InputSanitizationPipe implements PipeTransform {

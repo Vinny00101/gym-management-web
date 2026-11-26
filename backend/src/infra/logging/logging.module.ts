@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
-import { getRequestId } from '../../middleware/request-id.middleware.js';
+import { getRequestId } from '../../shared/middleware/request-id.middleware.js';
 
 const loggerModule = LoggerModule.forRoot({
   pinoHttp: {

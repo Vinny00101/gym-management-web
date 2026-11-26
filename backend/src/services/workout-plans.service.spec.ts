@@ -6,7 +6,7 @@ import {
 import type { CreateWorkoutPlanDto } from '../common/dto/create-workout-plan.dto.js';
 import { DivisionType, Role } from '../generated/prisma/enums.js';
 import type { PrismaService } from '../infra/database/prisma.service.js';
-import { OwnershipService } from './ownership.service.js';
+import { OwnershipService } from '../shared/identity/ownership.service.js';
 import { WorkoutPlanService } from './workout-plans.service.js';
 
 describe('WorkoutPlanService', () => {
