@@ -20,17 +20,20 @@ describe('WorkoutPlanService', () => {
     name: 'Ana',
     instructorId: 3,
     activePlanId: null as number | null,
+    activePlanAssignedAt: null as Date | null,
   };
   const otherMember = {
     id: 13,
     name: 'Bruno',
     instructorId: 9,
     activePlanId: null as number | null,
+    activePlanAssignedAt: null as Date | null,
   };
 
   const prisma = {
     user: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
     },
@@ -81,6 +84,7 @@ describe('WorkoutPlanService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prisma.user.findUnique.mockResolvedValue(member);
+    prisma.user.findFirst.mockResolvedValue(member);
     prisma.workoutPlan.findUnique.mockResolvedValue({
       id: 100,
       trainerId: trainer.id,
@@ -411,7 +415,10 @@ describe('WorkoutPlanService', () => {
     expect(assertOwnership).toHaveBeenCalledWith(trainer, member);
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: member.id },
-      data: { activePlanId: 100 },
+      data: {
+        activePlanId: 100,
+        activePlanAssignedAt: expect.any(Date),
+      },
     });
     expect(result).toMatchObject({ planId: 100, memberId: member.id });
     expect(result.assignedAt).toBeInstanceOf(Date);
@@ -465,12 +472,100 @@ describe('WorkoutPlanService', () => {
     prisma.user.findUnique.mockResolvedValue({
       ...member,
       activePlanId: 100,
+      activePlanAssignedAt: new Date('2026-11-26T12:00:00.000Z'),
     });
 
-    await service.assign(trainer, 100, { memberId: member.id });
+    const result = await service.assign(trainer, 100, { memberId: member.id });
 
     expect(prisma.$transaction).toHaveBeenCalledOnce();
     expect(prisma.user.update).not.toHaveBeenCalled();
+    expect(result.assignedAt).toEqual(new Date('2026-11-26T12:00:00.000Z'));
+  });
+
+  it('retorna o treino ativo ordenado, sem expor dados do membro', async () => {
+    const assignedAt = new Date('2026-11-26T12:00:00.000Z');
+    prisma.user.findFirst.mockResolvedValue({
+      ...member,
+      activePlanId: 100,
+      activePlanAssignedAt: assignedAt,
+    });
+    prisma.workoutPlan.findUnique.mockResolvedValue({
+      id: 100,
+      name: 'Treino A',
+      objective: 'Hipertrofia',
+      trainerId: trainer.id,
+      memberId: member.id,
+      divisions: [
+        {
+          id: 10,
+          name: 'Peito',
+          type: DivisionType.muscleGroup,
+          order: 1,
+          exercises: [
+            {
+              id: 20,
+              name: 'Supino',
+              sets: 4,
+              repetitions: 10,
+              order: 1,
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await service.findCurrent(
+      { id: member.id, role: Role.member },
+      member.id,
+    );
+
+    expect(result).toEqual({
+      id: 100,
+      name: 'Treino A',
+      objective: 'Hipertrofia',
+      assignedAt,
+      divisions: [
+        {
+          id: 10,
+          name: 'Peito',
+          type: DivisionType.muscleGroup,
+          exercises: [{ id: 20, name: 'Supino', sets: 4, repetitions: 10 }],
+        },
+      ],
+    });
+    expect(prisma.workoutPlan.findUnique).toHaveBeenCalledWith({
+      where: { id: 100 },
+      include: {
+        divisions: {
+          orderBy: { order: 'asc' },
+          include: { exercises: { orderBy: { order: 'asc' } } },
+        },
+      },
+    });
+  });
+
+  it('nega consulta por membro sem posse antes de buscar o plano', async () => {
+    prisma.user.findFirst.mockResolvedValue(otherMember);
+
+    await expect(
+      service.findCurrent(trainer, otherMember.id),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+
+    expect(prisma.workoutPlan.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('retorna 404 para membro inexistente ou sem plano atual', async () => {
+    prisma.user.findFirst.mockResolvedValue(null);
+    await expect(
+      service.findCurrent(trainer, member.id),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    prisma.user.findFirst.mockResolvedValue(member);
+    await expect(service.findCurrent(trainer, member.id)).rejects.toThrow(
+      'No active workout plan',
+    );
+
+    expect(prisma.workoutPlan.findUnique).not.toHaveBeenCalled();
   });
 
   it('retorna 404 para plano inexistente', async () => {

@@ -41,8 +41,9 @@ model User {
   refreshTokens RefreshToken[]
 
   // RD07: o plano atual é uma referência única; planos antigos ficam persistidos.
-  activePlanId Int?         @unique
-  activePlan   WorkoutPlan? @relation("UserActivePlan", fields: [activePlanId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  activePlanId         Int?         @unique
+  activePlan           WorkoutPlan? @relation("UserActivePlan", fields: [activePlanId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  activePlanAssignedAt DateTime?
 
   trainerPlans WorkoutPlan[] @relation("TrainerPlans")
   memberPlans  WorkoutPlan[] @relation("MemberPlans")
