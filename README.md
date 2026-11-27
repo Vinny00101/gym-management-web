@@ -96,6 +96,7 @@ Exemplo: `feat(auth): adiciona login com e-mail e senha`
 - [Requisitos](docs/requirements.md)
 - [Arquitetura](docs/architecture.md)
 - [Posse do recurso](docs/ownership-pattern.md)
+- [Tarefas da Parte 2: treinos e check-in](docs/tasks-parte-2.md)
 - [Changelog](CHANGELOG.md)
 
 ## Escopo por etapa
@@ -103,5 +104,5 @@ Exemplo: `feat(auth): adiciona login com e-mail e senha`
 | Etapa | Foco | Requisitos |
 | --- | --- | --- |
 | Parte 1 | Base da API, autenticação e membros | RF01–RF07, RNF01–RNF10, RNF14, RD01, RD05, RD09–RD11 |
-| Parte 2 | Treinos e check-in | RF08–RF14, RD02, RD03, RD06–RD08 |
+| Parte 2 | [Treinos e check-in](docs/tasks-parte-2.md) | RF08–RF14, RD02, RD03, RD06–RD08 |
 | Parte 3 | Relatórios, cache e deploy | RF15–RF18, RNF11–RNF13, RNF15, RNF16, RD04, RD12 |

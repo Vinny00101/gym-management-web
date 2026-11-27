@@ -1,5 +1,6 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import {
+  ApiOperation,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -21,13 +22,19 @@ export class MemberWorkoutPlanController {
   @Get(':memberId/workout-plan')
   @Roles(Role.member, Role.trainer)
   @ApiParam({ name: 'memberId', type: Number })
+  @ApiOperation({
+    summary: 'Consultar treino atual do membro',
+    description: 'Acesso: o próprio member ou seu trainer responsável.',
+  })
   @ApiOkResponse({
     description: 'Plano de treino atual do membro.',
     type: CurrentWorkoutPlanResponseDto,
   })
-  @ApiForbiddenResponse({ description: 'Acesso negado ao membro.' })
+  @ApiForbiddenResponse({
+    description: '403 FORBIDDEN: acesso negado ao membro.',
+  })
   @ApiNotFoundResponse({
-    description: 'Membro inexistente ou sem plano de treino atual.',
+    description: '404 NOT_FOUND: membro inexistente ou sem plano atual.',
   })
   findCurrent(
     @CurrentUser() user: AuthenticatedUser,
