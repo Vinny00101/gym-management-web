@@ -9,10 +9,17 @@
 - Pipeline HTTP centralizada em `setupApp()`, rotas sob `/api/v1` e Swagger gerado por factory
 - Módulos por domínio em `modules/`: `auth`, `members`, `staff` e `workout-plans`
 
-### Parte 2: treinos e check-in
+### Parte 2: treinos e check-in (concluída)
 
-- Migração com `WorkoutPlan`, `WorkoutDivision`, `Exercise` e `CheckIn`
-- Criação de plano de treino com divisões (RF08)
+- [x] Modelagem e migração de `WorkoutPlan`, `WorkoutDivision`, `Exercise` e `CheckIn` (P2-01, #34)
+- [x] Criação de plano de treino com divisões (RF08, P2-02, #35)
+- [x] Inclusão de exercícios nas divisões (RF09, P2-03, #36)
+- [x] Atribuição de plano ao membro sem remover planos anteriores (RF10/RD07, P2-04, #37)
+- [x] Edição transacional de plano, divisões e exercícios (RF11/RD08, P2-05, #38)
+- [x] Consulta do treino atual com controle de posse (RF12/RD06/RD11, P2-06, #39)
+- [x] Check-in de membro ativo com data local e unicidade diária (RF13/RD02/RD03, P2-07, #40)
+- [x] Consulta paginada do histórico com filtros de período e posse (RF14/RD11, P2-08, #41)
+- [x] Testes unitários, e2e, documentação Swagger e fluxo ponta a ponta da Parte 2 (#42)
 
 ## [0.1.0] - 2026-11-20
 

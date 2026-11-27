@@ -14,6 +14,7 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
+  ApiOperation,
   ApiOkResponse,
   ApiQuery,
   ApiTags,
@@ -36,6 +37,11 @@ export class CheckInsController {
 
   @Get()
   @Roles(Role.admin, Role.trainer, Role.member)
+  @ApiOperation({
+    summary: 'Consultar histórico de check-ins',
+    description:
+      'Acesso: admin, trainer (membros associados) ou member (próprio histórico).',
+  })
   @ApiQuery({ name: 'memberId', required: false, type: Number })
   @ApiQuery({
     name: 'from',
@@ -72,8 +78,12 @@ export class CheckInsController {
       'Histórico paginado; sem período, considera os últimos 30 dias locais em America/Sao_Paulo, incluindo hoje.',
     type: CheckInHistoryResponseDto,
   })
-  @ApiBadRequestResponse({ description: 'Filtros inválidos.' })
-  @ApiForbiddenResponse({ description: 'Acesso negado ao histórico.' })
+  @ApiBadRequestResponse({
+    description: '400 BAD_REQUEST: filtros inválidos ou intervalo invertido.',
+  })
+  @ApiForbiddenResponse({
+    description: '403 FORBIDDEN: tentativa de consultar histórico alheio.',
+  })
   findAll(
     @CurrentUser() user: AuthenticatedUser,
     @Query() query: ListCheckInsQueryDto,
@@ -85,6 +95,11 @@ export class CheckInsController {
   @HttpCode(HttpStatus.CREATED)
   @Roles(Role.member, Role.admin)
   @ApiBody({ type: CreateCheckInDto, required: false })
+  @ApiOperation({
+    summary: 'Registrar check-in',
+    description:
+      'Acesso: member registra a própria entrada; admin informa memberId.',
+  })
   @ApiCreatedResponse({
     description: 'Check-in registrado.',
     type: CheckInResponseDto,
