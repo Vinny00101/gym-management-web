@@ -51,15 +51,110 @@ describe('Check-ins (e2e)', () => {
   let app: INestApplication<App>;
   let jwt: JwtService;
 
-  const users = new Map([
-    [1, { id: 1, role: Role.admin, status: UserStatus.active }],
-    [2, { id: 2, role: Role.trainer, status: UserStatus.active }],
-    [7, { id: 7, role: Role.member, status: UserStatus.active }],
-    [8, { id: 8, role: Role.member, status: UserStatus.inactive }],
-    [9, { id: 9, role: Role.member, status: UserStatus.suspended }],
-    [10, { id: 10, role: Role.member, status: UserStatus.active }],
+  type TestUser = {
+    id: number;
+    role: Role;
+    status: UserStatus;
+    instructorId: number | null;
+  };
+  type CheckInRecord = {
+    id: number;
+    memberId: number;
+    checkedInAt: Date;
+    localDate: Date;
+  };
+  const users = new Map<number, TestUser>([
+    [
+      1,
+      {
+        id: 1,
+        role: Role.admin,
+        status: UserStatus.active,
+        instructorId: null,
+      },
+    ],
+    [
+      2,
+      {
+        id: 2,
+        role: Role.trainer,
+        status: UserStatus.active,
+        instructorId: null,
+      },
+    ],
+    [
+      3,
+      {
+        id: 3,
+        role: Role.trainer,
+        status: UserStatus.active,
+        instructorId: null,
+      },
+    ],
+    [
+      7,
+      { id: 7, role: Role.member, status: UserStatus.active, instructorId: 2 },
+    ],
+    [
+      8,
+      {
+        id: 8,
+        role: Role.member,
+        status: UserStatus.inactive,
+        instructorId: 2,
+      },
+    ],
+    [
+      9,
+      {
+        id: 9,
+        role: Role.member,
+        status: UserStatus.suspended,
+        instructorId: 3,
+      },
+    ],
+    [
+      10,
+      { id: 10, role: Role.member, status: UserStatus.active, instructorId: 3 },
+    ],
   ]);
-  const checkIns = new Map<string, Record<string, unknown>>();
+  const checkIns = new Map<string, CheckInRecord>();
+
+  function matchingCheckIns(where: any): CheckInRecord[] {
+    return [...checkIns.values()]
+      .filter((record) => {
+        if (
+          where.memberId !== undefined &&
+          record.memberId !== where.memberId
+        ) {
+          return false;
+        }
+        if (
+          where.member?.instructorId !== undefined &&
+          users.get(record.memberId)?.instructorId !== where.member.instructorId
+        ) {
+          return false;
+        }
+        if (where.localDate?.gte && record.localDate < where.localDate.gte) {
+          return false;
+        }
+        if (where.localDate?.lte && record.localDate > where.localDate.lte) {
+          return false;
+        }
+        return true;
+      })
+      .sort(
+        (left, right) =>
+          right.checkedInAt.getTime() - left.checkedInAt.getTime(),
+      );
+  }
+
+  function seedCheckIn(record: CheckInRecord): void {
+    checkIns.set(
+      `${record.memberId}:${record.localDate.toISOString()}`,
+      record,
+    );
+  }
 
   const prismaMock = {
     user: {
@@ -110,7 +205,14 @@ describe('Check-ins (e2e)', () => {
         checkIns.set(key, record);
         return record;
       }),
+      findMany: vi.fn(async ({ where, skip, take }: any) =>
+        matchingCheckIns(where).slice(skip, skip + take),
+      ),
+      count: vi.fn(async ({ where }: any) => matchingCheckIns(where).length),
     },
+    $transaction: vi.fn(async (queries: Promise<unknown>[]) =>
+      Promise.all(queries),
+    ),
     $connect: vi.fn(),
     $disconnect: vi.fn(),
   };
@@ -226,6 +328,104 @@ describe('Check-ins (e2e)', () => {
     }
 
     expect(prismaMock.checkIn.create).not.toHaveBeenCalled();
+  });
+
+  it('filtra histórico por papel, membro, período e paginação', async () => {
+    const today = getSaoPauloLocalDate(new Date());
+    const previousDay = new Date(today);
+    previousDay.setUTCDate(previousDay.getUTCDate() - 1);
+    const oldDay = new Date(today);
+    oldDay.setUTCDate(oldDay.getUTCDate() - 35);
+    const noon = (date: Date) => new Date(date.getTime() + 12 * 60 * 60 * 1000);
+
+    seedCheckIn({
+      id: 1,
+      memberId: 7,
+      checkedInAt: noon(today),
+      localDate: today,
+    });
+    seedCheckIn({
+      id: 2,
+      memberId: 7,
+      checkedInAt: noon(previousDay),
+      localDate: previousDay,
+    });
+    seedCheckIn({
+      id: 3,
+      memberId: 10,
+      checkedInAt: noon(today),
+      localDate: today,
+    });
+    seedCheckIn({
+      id: 4,
+      memberId: 10,
+      checkedInAt: noon(oldDay),
+      localDate: oldDay,
+    });
+
+    const memberToken = await tokenFor(7, Role.member);
+    const memberResponse = await request(app.getHttpServer())
+      .get('/api/v1/check-ins')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .expect(200);
+    expect(memberResponse.body.total).toBe(2);
+    expect(
+      memberResponse.body.items.every((item: any) => item.memberId === 7),
+    ).toBe(true);
+
+    const trainerToken = await tokenFor(2, Role.trainer);
+    const trainerResponse = await request(app.getHttpServer())
+      .get('/api/v1/check-ins')
+      .set('Authorization', `Bearer ${trainerToken}`)
+      .expect(200);
+    expect(trainerResponse.body.total).toBe(2);
+    expect(
+      trainerResponse.body.items.every((item: any) => item.memberId === 7),
+    ).toBe(true);
+
+    const adminToken = await tokenFor(1, Role.admin);
+    const adminResponse = await request(app.getHttpServer())
+      .get('/api/v1/check-ins?page=2&pageSize=1')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(adminResponse.body).toMatchObject({
+      total: 3,
+      page: 2,
+      pageSize: 1,
+    });
+    expect(adminResponse.body.items).toHaveLength(1);
+
+    const todayString = today.toISOString().slice(0, 10);
+    const periodResponse = await request(app.getHttpServer())
+      .get(
+        `/api/v1/check-ins?memberId=10&from=${todayString}&to=${todayString}`,
+      )
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+    expect(periodResponse.body.total).toBe(1);
+    expect(periodResponse.body.items[0].memberId).toBe(10);
+  });
+
+  it('nega filtros de membro alheio e intervalo invertido', async () => {
+    const memberToken = await tokenFor(7, Role.member);
+    const trainerToken = await tokenFor(2, Role.trainer);
+    const adminToken = await tokenFor(1, Role.admin);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/check-ins?memberId=10')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .expect(403);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/check-ins?memberId=10')
+      .set('Authorization', `Bearer ${trainerToken}`)
+      .expect(403);
+
+    const reversed = await request(app.getHttpServer())
+      .get('/api/v1/check-ins?from=2026-11-27&to=2026-11-26')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(400);
+    expect(reversed.body.code).toBe('BAD_REQUEST');
   });
 
   afterAll(async () => {
