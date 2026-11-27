@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ObservabilityModule } from '../observability/observability.module.js';
 import { HealthController } from './health.controller.js';
+import { ObserveModule } from '../../app/app.observability.js';
 
 @Module({
-  imports: [ObservabilityModule],
+  imports: [ObserveModule],
   controllers: [HealthController],
 })
 export class HealthModule {}

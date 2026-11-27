@@ -137,7 +137,7 @@ export class WorkoutPlanService {
 
       this.ownership.assertCanAccessMember(user, member);
 
-      let assignedAt = member.activePlanAssignedAt;
+      let assignedAt: Date | null = member.activePlanAssignedAt;
       if (member.activePlanId !== plan.id) {
         assignedAt = new Date();
         await tx.user.update({
@@ -166,13 +166,13 @@ export class WorkoutPlanService {
     });
 
     if (!member) {
-      throw new NotFoundException('Member not found');
+      throw new NotFoundException('Membro não foi encontrado');
     }
 
     this.ownership.assertCanAccessMember(user, member);
 
     if (member.activePlanId === null) {
-      throw new NotFoundException('No active workout plan');
+      throw new NotFoundException('Nenhum plano de treino ativo');
     }
 
     const plan = await this.prisma.workoutPlan.findUnique({
@@ -188,7 +188,7 @@ export class WorkoutPlanService {
     });
 
     if (!plan) {
-      throw new NotFoundException('No active workout plan');
+      throw new NotFoundException('Nenhum plano de treino ativo');
     }
 
     return {

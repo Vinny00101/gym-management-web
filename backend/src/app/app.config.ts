@@ -1,11 +1,25 @@
 import { VersioningType, type INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
-import { configureHttp } from '../infra/http/configure-http.js';
 import { ApiExceptionFilter } from '../shared/errors/api-exception.filter.js';
 import { SecurityEventInterceptor } from '../shared/security/security-event.interceptor.js';
 import { SecurityEventService } from '../shared/security/security-event.service.js';
 import { SensitiveDataInterceptor } from '../shared/security/sensitive-data.interceptor.js';
 import { configureValidation } from '../shared/middleware/configure-validation.js';
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import helmet from "helmet";
+
+export function configureHttp(app: INestApplication){
+    app.use(helmet());
+
+    const swaggerConfig = new DocumentBuilder()
+        .setTitle('API de Gerenciamento de Academias')
+        .setDescription('API para gestão de academias')
+        .setVersion('1.0')
+        .addBearerAuth()
+        .build();
+      const documentFactory = () => SwaggerModule.createDocument(app, swaggerConfig);
+      SwaggerModule.setup('api/docs', app, documentFactory);
+}
 
 /**
  * Pipeline HTTP compartilhada por `main.ts` e pelos testes e2e.

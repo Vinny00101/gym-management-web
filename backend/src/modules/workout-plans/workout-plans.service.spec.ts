@@ -562,7 +562,7 @@ describe('WorkoutPlanService', () => {
 
     prisma.user.findFirst.mockResolvedValue(member);
     await expect(service.findCurrent(trainer, member.id)).rejects.toThrow(
-      'No active workout plan',
+      'Nenhum plano de treino ativo',
     );
 
     expect(prisma.workoutPlan.findUnique).not.toHaveBeenCalled();

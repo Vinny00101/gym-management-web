@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger } from 'nestjs-pino';
-import { setupApp } from './app/setup-app.js';
+import { setupApp } from './app/app.config.js';
 import { AppModule } from './app/app.module.js';
-import { ObserveInstrument } from './infra/observability/observability.module.js';
+import { ObserveInstrument } from './app/app.observability.js';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {

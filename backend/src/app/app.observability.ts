@@ -1,6 +1,11 @@
+
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
-import { getRequestId } from '../../shared/middleware/request-id.middleware.js';
+import { createObserveModule } from '@nestjs/observe';
+import { TerminusModule } from '@nestjs/terminus';
+import { getRequestId } from '../shared/middleware/request-id.middleware.js';
+
+export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
 const loggerModule = LoggerModule.forRoot({
   pinoHttp: {
@@ -29,7 +34,19 @@ const loggerModule = LoggerModule.forRoot({
 });
 
 @Module({
-  imports: [loggerModule],
-  exports: [loggerModule],
+  imports: [
+    loggerModule,
+    TerminusModule,
+    ObserveModule.forRoot({
+      appKey: process.env.OBSERVE_APP_KEY ?? 'YOUR_APP_KEY',
+      appSecret: process.env.OBSERVE_APP_SECRET ?? 'YOUR_APP_SECRET',
+      serviceId: 'backend',
+    }),
+  ],
+  exports: [
+    loggerModule,
+    TerminusModule,
+    ObserveModule,
+  ],
 })
-export class LoggingModule {}
+export class ObservabilityModule {}

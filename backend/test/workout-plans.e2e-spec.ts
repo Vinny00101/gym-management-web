@@ -10,7 +10,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
-import { setupApp } from '../src/app/setup-app.js';
+import { setupApp } from '../src/app/app.config.js';
 import { AuthGuardsModule } from '../src/shared/identity/auth-guards.module.js';
 import { WorkoutPlansModule } from '../src/modules/workout-plans/workout-plans.module.js';
 import {

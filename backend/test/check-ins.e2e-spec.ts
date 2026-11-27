@@ -10,7 +10,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerModule } from 'nestjs-pino';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
-import { setupApp } from '../src/app/setup-app.js';
+import { setupApp } from '../src/app/app.config.js';
 import { CheckInsModule } from '../src/modules/check-ins/check-ins.module.js';
 import { Prisma } from '../src/generated/prisma/client.js';
 import { Role, UserStatus } from '../src/generated/prisma/enums.js';
