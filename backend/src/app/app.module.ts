@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AuthModule } from '../modules/auth/auth.module.js';
 import { MembersModule } from '../modules/members/members.module.js';
 import { StaffModule } from '../modules/staff/staff.module.js';
+import { CheckInsModule } from '../modules/check-ins/check-ins.module.js';
 import { WorkoutPlansModule } from '../modules/workout-plans/workout-plans.module.js';
 import { CacheModule } from '../infra/cache/cache.module.js';
 import { AppConfigModule } from '../infra/config/config.module.js';
@@ -25,6 +26,7 @@ import { RequestIdMiddleware } from '../shared/middleware/request-id.middleware.
     MembersModule,
     StaffModule,
     WorkoutPlansModule,
+    CheckInsModule,
     ObservabilityModule,
     HealthModule,
   ],
